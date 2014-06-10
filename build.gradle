@@ -1,0 +1,10 @@
+apply plugin: 'scala'
+apply plugin: 'idea'
+
+group='jk_5.nailed.mcp'
+version='1.0.0-SNAPSHOT'
+
+dependencies {
+    compile gradleApi()
+}
+
