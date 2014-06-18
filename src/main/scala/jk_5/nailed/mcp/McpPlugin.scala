@@ -1,0 +1,81 @@
+package jk_5.nailed.mcp
+
+import org.gradle.api._
+import _root_.java.util
+import jk_5.nailed.mcp.tasks.common.DownloadTask
+import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import jk_5.nailed.mcp.tasks.GenerateMappingsTask
+
+/**
+ * No description given
+ *
+ * @author jk-5
+ */
+class McpPlugin extends Plugin[Project] {
+
+  var project: Project = _
+
+  override def apply(project: Project){
+    this.project = project
+
+    project.afterEvaluate(new Action[Project] {
+      override def execute(project: Project){
+        afterEvaluate(project)
+      }
+    })
+
+    project.allprojects(new Action[Project] {
+      override def execute(project: Project){
+        project.getRepositories.mavenCentral
+        project.getRepositories.maven(new Action[MavenArtifactRepository]{
+          override def execute(repo: MavenArtifactRepository){
+            repo.setName("reening")
+            repo.setUrl("http://maven.reening.nl")
+          }
+        })
+      }
+    })
+
+    project.getExtensions.create(Constants.MCP_EXTENSION_NAME, classOf[NailedMCPExtension], project)
+
+    project.getConfigurations.create(Constants.FERNFLOWER_CONFIGURATION)
+    project.getDependencies.add(Constants.FERNFLOWER_CONFIGURATION, "de.fernflower:fernflower:1.0")
+
+    makeTask("downloadServer", classOf[DownloadTask]){ t =>
+      t.setOutput(Constants.SERVER_JAR_VANILLA)
+      t.setUrl(Constants.MC_SERVER_URL)
+    }
+
+    makeTask("generateMappings", classOf[GenerateMappingsTask]){ t =>
+      t.setInSrg(Constants.JOINED_SRG)
+      t.setInExc(Constants.JOINED_EXC)
+      t.setMethodCsv(Constants.METHODS_CSV)
+      t.setFieldCsv(Constants.FIELDS_CSV)
+      t.setNotchToSrg(Constants.NOTCH_2_SRG_SRG)
+      t.setNotchToMcp(Constants.NOTCH_2_MCP_SRG)
+      t.setMcpToSrg(Constants.MCP_2_SRG_SRG)
+      t.setMcpToNotch(Constants.MCP_2_NOTCH_SRG)
+      t.setSrgExc(Constants.SRG_EXC)
+      t.setMcpExc(Constants.MCP_EXC)
+      t.setDoesCache(false)
+    }
+  }
+
+  def afterEvaluate(project: Project){
+    project.getLogger.lifecycle(project.getConfigurations.getByName(Constants.FERNFLOWER_CONFIGURATION).getSingleFile.getAbsolutePath)
+  }
+
+  @inline def makeTask[T <: Task](name: String, cl: Class[T])(configure: (T) => Unit): T = makeTask(this.project, name, cl)(configure)
+  def makeTask[T <: Task](project: Project, name: String, cl: Class[T])(configure: (T) => Unit): T = {
+    val map = new util.HashMap[String, AnyRef]()
+    map.put("name", name)
+    map.put("type", cl)
+    val t = project.task(map, name).asInstanceOf[T]
+    configure(t)
+    t
+  }
+
+  implicit def toDelayedString(s: String): DelayedString = new DelayedString(s, this.project)
+  implicit def toDelayedFile(s: String): DelayedFile = new DelayedFile(s, this.project)
+}
