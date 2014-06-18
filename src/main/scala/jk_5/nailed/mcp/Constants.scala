@@ -33,4 +33,6 @@ object Constants {
   final val MCP_2_NOTCH_SRG = "{BUILD_DIR}/tmp/mappings/mcp2notch.srg"
   final val SRG_EXC = "{BUILD_DIR}/tmp/mappings/srg.exc"
   final val MCP_EXC = "{BUILD_DIR}/tmp/mappings/mcp.exc"
+
+  final val NAILED_RESOURCES = "{PROJECT_DIR}/src/main/resources"
 }

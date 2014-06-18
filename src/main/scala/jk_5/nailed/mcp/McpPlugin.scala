@@ -6,6 +6,7 @@ import jk_5.nailed.mcp.tasks.common.DownloadTask
 import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import jk_5.nailed.mcp.tasks.GenerateMappingsTask
+import scala.collection.convert.wrapAsScala._
 
 /**
  * No description given
@@ -59,6 +60,14 @@ class McpPlugin extends Plugin[Project] {
       t.setSrgExc(Constants.SRG_EXC)
       t.setMcpExc(Constants.MCP_EXC)
       t.setDoesCache(false)
+
+      for(f <- project.fileTree(toDelayedFile(Constants.NAILED_RESOURCES).call()).getFiles){
+        if(f.getPath.endsWith(".exc")){
+          t.addExtraExc(f)
+        }else if(f.getPath.endsWith(".srg")){
+          t.addExtraSrg(f)
+        }
+      }
     }
   }
 
