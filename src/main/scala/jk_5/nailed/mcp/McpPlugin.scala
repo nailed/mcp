@@ -5,7 +5,7 @@ import _root_.java.util
 import jk_5.nailed.mcp.tasks.common.DownloadTask
 import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
-import jk_5.nailed.mcp.tasks.GenerateMappingsTask
+import jk_5.nailed.mcp.tasks.{DeobfuscateTask, GenerateMappingsTask}
 import scala.collection.convert.wrapAsScala._
 
 /**
@@ -68,6 +68,37 @@ class McpPlugin extends Plugin[Project] {
           t.addExtraSrg(f)
         }
       }
+    }
+
+    makeTask("deobfuscate", classOf[DeobfuscateTask]){ t =>
+      t.setInJar(Constants.SERVER_JAR_VANILLA)
+      t.setOutJar(Constants.JAR_SRG)
+      t.setSrg(Constants.NOTCH_2_SRG_SRG)
+      t.setExceptorConfig(Constants.JOINED_EXC)
+      t.setExceptorJson(Constants.EXC_JSON)
+      //t.addAccessTransformer(Constants.NAILED_RESOURCES + "/nailed_at.cfg")
+      t.setApplyMarkers(applyMarkers = true)
+      t.dependsOn("downloadServer", "generateMappings")
+    }
+
+    /*makeTask("decompile", classOf[DecompileTask]){ t =>
+      t.dependsOn("deobfuscate", "generateMappings")
+    }*/
+
+    /*makeTask("remapCleanSource", classOf[RemapSourceTask]){ t =>
+      t.dependsOn("decompile")
+    }*/
+
+    /*makeTask("patchSource", classOf[PatchSourceTask]){ t =>
+      t.dependsOn("decompile")
+    }*/
+
+    /*makeTask("remapDirtySource", classOf[RemapSourceTask]){ t =>
+      t.dependsOn("patchSource")
+    }*/
+
+    makeTask("setupNailed", classOf[DefaultTask]){ t =>
+
     }
   }
 

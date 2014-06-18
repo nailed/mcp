@@ -23,7 +23,9 @@ object DelayedResolver {
     p = p.replace("{MAPPINGS_DIR}", project.getRootDir.getAbsolutePath.replace('\\', '/') + "/mappings")
     p = p.replace("{BUILD_DIR}", project.getBuildDir.getAbsolutePath.replace('\\', '/'))
     p = p.replace("{PROJECT_DIR}", project.getRootDir.getAbsolutePath.replace('\\', '/'))
-    p = p.replace("{MC_VERSION}", ext.getMinecraftVersion)
+    if(ext != null){
+      p = p.replace("{MC_VERSION}", ext.getMinecraftVersion)
+    }
 
     project.getLogger.info("Resolved: {}", p)
 
