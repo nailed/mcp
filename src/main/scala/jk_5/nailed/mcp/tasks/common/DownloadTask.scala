@@ -5,9 +5,10 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
 import java.io._
-import java.net.URL
+import java.net.{HttpURLConnection, URL}
 import jk_5.nailed.mcp.tasks.common.CachedTask.Cached
 import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
+import com.google.common.io.ByteStreams
 
 /**
  * No description given
@@ -27,8 +28,17 @@ class DownloadTask extends CachedTask {
     getLogger.info("Downloading {} to {}", getUrl, outputFile)
     getLogger.lifecycle("Download {}", getUrl)
 
-    import sys.process._
-    (new URL(getUrl) #> outputFile).!!
+    val connection = new URL(getUrl).openConnection.asInstanceOf[HttpURLConnection]
+    connection.setInstanceFollowRedirects(true)
+
+    val inStream = connection.getInputStream
+    val outStream = new FileOutputStream(outputFile)
+
+    ByteStreams.copy(inStream, outStream)
+
+    inStream.close()
+    outStream.flush()
+    outStream.close()
 
     getLogger.info("Download complete", new Array[AnyRef](0))
   }
