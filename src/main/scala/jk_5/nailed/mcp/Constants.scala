@@ -18,6 +18,7 @@ object Constants {
 
   final val FERNFLOWER_CONFIGURATION = "fernFlower"
 
+  final val JAR_NONSHADED = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_nonshaded/{MC_VERSION}/minecraft_nonshaded-{MC_VERSION}.jar"
   final val JAR_SRG = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_srg/{MC_VERSION}/minecraft_srg-{MC_VERSION}.jar"
 
   //Mappings
@@ -38,4 +39,5 @@ object Constants {
   final val MCP_EXC = "{BUILD_DIR}/tmp/mappings/mcp.exc"
 
   final val NAILED_RESOURCES = "{PROJECT_DIR}/src/main/resources"
+  final val SHADEDLIB_REMOVE_CONFIG = "{PROJECT_DIR}/removeClasses.cfg"
 }

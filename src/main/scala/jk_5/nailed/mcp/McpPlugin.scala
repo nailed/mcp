@@ -5,7 +5,7 @@ import _root_.java.util
 import jk_5.nailed.mcp.tasks.common.DownloadTask
 import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
-import jk_5.nailed.mcp.tasks.{DeobfuscateTask, GenerateMappingsTask}
+import jk_5.nailed.mcp.tasks.{RemoveShadedLibsTask, DeobfuscateTask, GenerateMappingsTask}
 import scala.collection.convert.wrapAsScala._
 
 /**
@@ -48,6 +48,13 @@ class McpPlugin extends Plugin[Project] {
       t.setUrl(Constants.MC_SERVER_URL)
     }
 
+    makeTask("removeShadedLibs", classOf[RemoveShadedLibsTask]){ t =>
+      t.setConfig(Constants.SHADEDLIB_REMOVE_CONFIG)
+      t.setInJar(Constants.SERVER_JAR_VANILLA)
+      t.setOutJar(Constants.JAR_NONSHADED)
+      t.dependsOn("downloadServer")
+    }
+
     makeTask("generateMappings", classOf[GenerateMappingsTask]){ t =>
       t.setInSrg(Constants.JOINED_SRG)
       t.setInExc(Constants.JOINED_EXC)
@@ -71,7 +78,7 @@ class McpPlugin extends Plugin[Project] {
     }
 
     makeTask("deobfuscate", classOf[DeobfuscateTask]){ t =>
-      t.setInJar(Constants.SERVER_JAR_VANILLA)
+      t.setInJar(Constants.JAR_NONSHADED)
       t.setOutJar(Constants.JAR_SRG)
       t.setSrg(Constants.NOTCH_2_SRG_SRG)
       t.setExceptorConfig(Constants.JOINED_EXC)
@@ -80,7 +87,7 @@ class McpPlugin extends Plugin[Project] {
       t.setApplyMarkers(applyMarkers = true)
       t.setFieldCsv(Constants.FIELDS_CSV)
       t.setMethodCsv(Constants.METHODS_CSV)
-      t.dependsOn("downloadServer", "generateMappings")
+      t.dependsOn("removeShadedLibs", "generateMappings")
     }
 
     /*makeTask("decompile", classOf[DecompileTask]){ t =>
