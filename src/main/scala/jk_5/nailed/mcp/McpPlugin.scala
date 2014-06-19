@@ -5,7 +5,7 @@ import _root_.java.util
 import jk_5.nailed.mcp.tasks.common.DownloadTask
 import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
-import jk_5.nailed.mcp.tasks.{RemoveShadedLibsTask, DeobfuscateTask, GenerateMappingsTask}
+import jk_5.nailed.mcp.tasks.{DecompileTask, RemoveShadedLibsTask, DeobfuscateTask, GenerateMappingsTask}
 import scala.collection.convert.wrapAsScala._
 
 /**
@@ -90,9 +90,13 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("removeShadedLibs", "generateMappings")
     }
 
-    /*makeTask("decompile", classOf[DecompileTask]){ t =>
+    makeTask("decompile", classOf[DecompileTask]){ t =>
+      t.setInJar(Constants.JAR_SRG)
+      t.setFernFlowerJar(project.getConfigurations.getByName(Constants.FERNFLOWER_CONFIGURATION).getSingleFile)
+      t.setPatch(Constants.MCP_PATCHES)
+      t.setOutJar(Constants.ZIP_DECOMP)
       t.dependsOn("deobfuscate", "generateMappings")
-    }*/
+    }
 
     /*makeTask("remapCleanSource", classOf[RemapSourceTask]){ t =>
       t.dependsOn("decompile")
@@ -112,7 +116,7 @@ class McpPlugin extends Plugin[Project] {
   }
 
   def afterEvaluate(project: Project){
-    project.getLogger.lifecycle(project.getConfigurations.getByName(Constants.FERNFLOWER_CONFIGURATION).getSingleFile.getAbsolutePath)
+
   }
 
   @inline def makeTask[T <: Task](name: String, cl: Class[T])(configure: (T) => Unit): T = makeTask(this.project, name, cl)(configure)

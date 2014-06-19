@@ -33,6 +33,9 @@ dependencies {
     compile 'net.minecraftforge.srg2source:Srg2Source:3.2-SNAPSHOT'
     compile 'de.oceanlabs.mcp:mcinjector:3.2-SNAPSHOT'
     compile 'com.google.code.gson:gson:2.2.4'
+    compile 'com.cloudbees:diff4j:1.1'
+    compile 'com.github.abrarsyed.jastyle:jAstyle:1.2'
+    compile 'com.github.tony19:named-regexp:0.2.3'
 
     compile gradleApi()
 }

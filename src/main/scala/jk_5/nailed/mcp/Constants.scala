@@ -20,6 +20,7 @@ object Constants {
 
   final val JAR_NONSHADED = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_nonshaded/{MC_VERSION}/minecraft_nonshaded-{MC_VERSION}.jar"
   final val JAR_SRG = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_srg/{MC_VERSION}/minecraft_srg-{MC_VERSION}.jar"
+  final val ZIP_DECOMP = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_decomp/{MC_VERSION}/minecraft_decomp-{MC_VERSION}.zip"
 
   //Mappings
   final val JOINED_SRG = "{MAPPINGS_DIR}/joined.srg"
@@ -29,6 +30,7 @@ object Constants {
   final val PARAMS_CSV = "{MAPPINGS_DIR}/params.csv"
   final val PACKAGES_CSV = "{MAPPINGS_DIR}/packages.csv"
   final val EXC_JSON = "{MAPPINGS_DIR}/exceptor.json"
+  final val MCP_PATCHES = "{MAPPINGS_DIR}/patches"
 
   //Generated files
   final val NOTCH_2_SRG_SRG = "{BUILD_DIR}/tmp/mappings/notch2srg.srg"
