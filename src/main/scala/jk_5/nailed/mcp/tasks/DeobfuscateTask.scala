@@ -8,11 +8,22 @@ import org.gradle.api.tasks._
 import jk_5.nailed.mcp.delayed.DelayedFile
 import jk_5.nailed.mcp.tasks.common.CachedTask.Cached
 import com.google.common.collect.Lists
-import java.io.File
+import java.io.{FileOutputStream, BufferedOutputStream, File}
 import net.md_5.specialsource._
-import com.google.common.io.{LineProcessor, Files}
-import com.google.common.base.{Joiner, Charsets}
+import com.google.common.io.{ByteStreams, LineProcessor, Files}
+import com.google.common.base.Charsets
 import net.md_5.specialsource.provider.{JarProvider, JointProvider}
+import jk_5.nailed.mcp.json.JsonFactory
+import jk_5.nailed.mcp.{NailedMCPExtension, Constants}
+import de.oceanlabs.mcp.mcinjector.MCInjectorImpl
+import org.objectweb.asm.Opcodes.ACC_FINAL
+import org.objectweb.asm.Opcodes.ACC_PRIVATE
+import org.objectweb.asm.Opcodes.ACC_PROTECTED
+import org.objectweb.asm.Opcodes.ACC_PUBLIC
+import java.util.zip.{ZipEntry, ZipFile, ZipOutputStream}
+import org.objectweb.asm.{ClassWriter, Opcodes, ClassReader}
+import org.objectweb.asm.tree.{MethodNode, FieldNode, ClassNode}
+import java.util
 
 /**
  * No description given
@@ -39,14 +50,14 @@ class DeobfuscateTask extends CachedTask {
 
   @TaskAction def doTask(){
     val tempObfJar = new File(getTemporaryDir, "postDeobf.jar")
-    val tempExcJar = if(stripSynthetics) new File(getTemporaryDir, "postExceptor.jar")
+    val tempExcJar = if(stripSynthetics) new File(getTemporaryDir, "postExceptor.jar")  else getOutJar
     val ats = mutable.HashSet[File]()
     this.accessTransformers.foreach(t => ats.add(getProject.file(t).getCanonicalFile))
 
     getLogger.lifecycle("Applying SpecialSource", new Array[String](0))
     deobfuscateJar(getInJar, tempObfJar, getSrg, ats)
 
-    /*val log = if(getLog == null) getLog else new File(getTemporaryDir, "exceptor.log")
+    val log = if(getLog != null) getLog else new File(getTemporaryDir, "exceptor.log")
 
     getLogger.lifecycle("Applying Exceptor", new Array[String](0))
     applyExceptor(tempObfJar, tempExcJar, getExceptorConfig, log, ats)
@@ -54,7 +65,7 @@ class DeobfuscateTask extends CachedTask {
     if(stripSynthetics){
       getLogger.lifecycle("Stripping Synthetics", new Array[String](0))
       stripSynthetics(tempExcJar, getOutJar)
-    }*/
+    }
   }
 
   def deobfuscateJar(inJar: File, outJar: File, srg: File, ats: mutable.HashSet[File]){
@@ -113,6 +124,107 @@ class DeobfuscateTask extends CachedTask {
     remapper.remapJar(input, outJar)
   }
 
+  def applyExceptor(inJar: File, outJar: File, config: File, log: File, accessTransformers: mutable.HashSet[File]){
+    val excJson = getExceptorJson
+    var json: String = null
+    if(excJson != null){
+      val entries = JsonFactory.loadExcepterJson(excJson)
+      for(at <- accessTransformers){
+        getLogger.info("Fixing exceptor config for AccessTransformer {}", at.getCanonicalPath)
+        Files.readLines(at, Charsets.UTF_8, new LineProcessor[Any]{
+          override def getResult = null
+          override def processLine(l: String): Boolean = {
+            var line = l
+            if(line.indexOf('#') != -1) line = line.substring(0, line.indexOf('#'))
+            line = line.trim.replace('.', '/')
+            if(line.isEmpty) return true
+
+            val s = line.split(" ")
+
+            if(s.length == 2 && s(1).indexOf('$') > 0){
+              val parent = s(1).substring(0, s(1).indexOf('$'))
+              for(e <- Array(entries.get(parent), entries.get(s(1))).filter(c => c != null && c.innerClasses != null)){
+                for(inner <- e.innerClasses.filter(_.inner_class == s(1))){
+                  val access = fixAccess(inner.getAccess, s(0))
+                  inner.access = if(access == 0) null else Integer.toHexString(access)
+                }
+              }
+            }
+            true
+          }
+        })
+      }
+      val jsonTmp = new File(this.getTemporaryDir, "transformed.json")
+      json = jsonTmp.getCanonicalPath
+      Files.write(JsonFactory.gson.toJson(entries).getBytes, jsonTmp)
+    }
+    val ext = getProject.getExtensions.getByName(Constants.MCP_EXTENSION_NAME).asInstanceOf[NailedMCPExtension]
+    val genParams = ext.getMinecraftVersion != "1.7.2" //We want this after minecraft 1.7.2, so just check it here
+
+    getLogger.debug("INPUT: {}", inJar)
+    getLogger.debug("OUTPUT: {}", outJar)
+    getLogger.debug("CONFIG: {}", config)
+    getLogger.debug("JSON: {}", json)
+    getLogger.debug("LOG: {}", log)
+    getLogger.debug("PARAMS: {}", genParams)
+
+    MCInjectorImpl.process(inJar.getCanonicalPath, outJar.getCanonicalPath, config.getCanonicalPath, log.getCanonicalPath, null, 0, json, isApplyMarkers, genParams)
+  }
+
+  def fixAccess(access: Int, target: String): Int = {
+    var ret = access & ~7
+    val t = if(target.startsWith("public")) ACC_PUBLIC
+      else if(target.startsWith("protected")) ACC_PROTECTED
+      else if(target.startsWith("private")) ACC_PRIVATE
+      else 0
+    access & 7 match {
+      case ACC_PRIVATE => ret |= t
+      case 0 => ret |= (if(t != ACC_PRIVATE) t else 0)
+      case ACC_PROTECTED => ret |= (if(t != ACC_PRIVATE && t != 0) t else ACC_PROTECTED)
+      case ACC_PUBLIC => ret |= ACC_PUBLIC
+    }
+    if(target.endsWith("-f")) ret &= ~ACC_FINAL
+    else if(target.endsWith("+f")) ret |= ACC_FINAL
+    ret
+  }
+
+  def stripSynthetics(inJar: File, outJar: File){
+    val in = new ZipFile(inJar)
+    val out = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(outJar)))
+
+    for(entry <- in.entries().filter(e => !e.getName.contains("META-INF"))){
+      if(entry.isDirectory){
+        out.putNextEntry(entry)
+      }else{
+        val n = new ZipEntry(entry.getName)
+        n.setTime(entry.getTime)
+        out.putNextEntry(n)
+        var data = ByteStreams.toByteArray(in.getInputStream(entry))
+        if(entry.getName.endsWith(".class")){
+          data = stripSynthetics(entry.getName, data)
+        }
+        out.write(data)
+      }
+    }
+  }
+
+  def stripSynthetics(name: String, data: Array[Byte]): Array[Byte] = {
+    val reader = new ClassReader(data)
+    val cnode = new ClassNode()
+    reader.accept(cnode, 0)
+    if((cnode.access & Opcodes.ACC_ENUM) == 0 && !cnode.superName.equals("java/lang/Enum") && (cnode.access & Opcodes.ACC_SYNTHETIC) == 0){
+      for(f <- cnode.fields.asInstanceOf[util.List[FieldNode]]){
+        f.access = f.access & (0xffffffff-Opcodes.ACC_SYNTHETIC)
+      }
+      for(f <- cnode.methods.asInstanceOf[util.List[MethodNode]]){
+        f.access = f.access & (0xffffffff-Opcodes.ACC_SYNTHETIC)
+      }
+    }
+    val writer = new ClassWriter(0)
+    cnode.accept(writer)
+    writer.toByteArray
+  }
+
   def addAccessTransformer(obj: Any*) = obj.foreach{
     case f: DelayedFile => this.accessTransformers.add(f)
     case f: File => this.accessTransformers.add(new DelayedFile(f.getAbsolutePath, getProject))
@@ -132,7 +244,7 @@ class DeobfuscateTask extends CachedTask {
   def setStripSynthetics(stripSynthetics: Boolean) = this.stripSynthetics = stripSynthetics
 
   def getExceptorConfig = this.exceptorCfg.call()
-  def getExceptorJson = this.exceptorJson.call()
+  def getExceptorJson = if(this.exceptorJson != null) this.exceptorJson.call() else null
   def isApplyMarkers = this.applyMarkers
   def getInJar = this.inJar.call()
   def getLog = if(this.log == null) null else this.log.call()

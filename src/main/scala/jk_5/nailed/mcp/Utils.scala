@@ -4,7 +4,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.util
 import java.security.MessageDigest
-import java.util.zip.ZipInputStream
 import au.com.bytecode.opencsv.{CSVParser, CSVReader}
 import com.google.common.io.Files
 import java.nio.charset.Charset
@@ -19,8 +18,8 @@ object Utils {
   final val UTF_8 = Charset.forName("UTF-8")
 
   def hash(file: File): String =
-    if(file.getPath.endsWith(".zip") || file.getPath.endsWith(".jar")) hashZip(file, Constants.HASH_FUNC)
-    else hash(file, Constants.HASH_FUNC)
+    /*if(file.getPath.endsWith(".zip") || file.getPath.endsWith(".jar")) hashZip(file, Constants.HASH_FUNC)
+    else */hash(file, Constants.HASH_FUNC)
 
   def hashAll(file: File): util.List[String] = {
     val list = new util.ArrayList[String]()
@@ -46,7 +45,7 @@ object Utils {
     null
   }
 
-  def hashZip(file: File, function: String): String = {
+  /*def hashZip(file: File, function: String): String = {
     try{
       val hasher = MessageDigest.getInstance(function)
       val zin = new ZipInputStream(new FileInputStream(file))
@@ -68,7 +67,7 @@ object Utils {
         e.printStackTrace()
         null
     }
-  }
+  }*/
 
   @inline def hash(str: String): String = hash(str.getBytes)
   @inline def hash(bytes: Array[Byte]): String = hash(bytes, Constants.HASH_FUNC)

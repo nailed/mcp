@@ -200,7 +200,7 @@ public abstract class CachedTask extends DefaultTask {
                 File dir = (File) input.getValue(instance);
                 hashes.addAll(Utils.hashAll(dir));
             }else if(m.isAnnotationPresent(InputFiles.class)){
-                FileCollection files = (FileCollection) input.getValue(instance);
+                FileCollection files = getProject().files(input.getValue(instance));
                 for(File file : files.getFiles()){
                     String hash = Utils.hash(file);
                     hashes.add(hash);
@@ -290,7 +290,7 @@ public abstract class CachedTask extends DefaultTask {
                 }
             }
 
-            return method.invoke(instance, new Object[0]);
+            return method.invoke(instance);
         }
     }
 
