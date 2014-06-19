@@ -78,6 +78,8 @@ class McpPlugin extends Plugin[Project] {
       t.setExceptorJson(Constants.EXC_JSON)
       //t.addAccessTransformer(Constants.NAILED_RESOURCES + "/nailed_at.cfg")
       t.setApplyMarkers(applyMarkers = true)
+      t.setFieldCsv(Constants.FIELDS_CSV)
+      t.setMethodCsv(Constants.METHODS_CSV)
       t.dependsOn("downloadServer", "generateMappings")
     }
 

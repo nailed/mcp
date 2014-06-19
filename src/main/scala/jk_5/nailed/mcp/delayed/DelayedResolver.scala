@@ -23,7 +23,7 @@ object DelayedResolver {
     p = p.replace("{MAPPINGS_DIR}", project.getRootDir.getAbsolutePath.replace('\\', '/') + "/mappings")
     p = p.replace("{BUILD_DIR}", project.getBuildDir.getAbsolutePath.replace('\\', '/'))
     p = p.replace("{PROJECT_DIR}", project.getRootDir.getAbsolutePath.replace('\\', '/'))
-    if(ext != null){
+    if(ext.getMinecraftVersion != null){
       p = p.replace("{MC_VERSION}", ext.getMinecraftVersion)
     }
 
