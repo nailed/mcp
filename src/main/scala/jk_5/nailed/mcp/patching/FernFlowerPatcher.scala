@@ -73,16 +73,17 @@ object FernFlowerPatcher {
           }
 
           if(matcher.group("type").equals("enum")){
-            processEnum(lines, newIndent, i+1, classPath, matcher.group("name"))
+            processEnum(lines, newIndent, i + 1, classPath, matcher.group("name"))
           }
 
-          i = processClass(lines, newIndent, i+1, classPath, matcher.group("name"))
+          i = processClass(lines, newIndent, i + 1, classPath, matcher.group("name"))
         }
         if(line.startsWith(indent + "}")) return i
       }
       i += 1
     }
-    0
+    //0
+    startIndex
   }
 
   def processEnum(lines: util.List[String], indent: String, startIndex: Int, qualifiedName: String, simpleName: String){
