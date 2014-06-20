@@ -78,7 +78,7 @@ object FernFlowerPatcher {
 
           i = processClass(lines, newIndent, i+1, classPath, matcher.group("name"))
         }
-        if(line.startsWith(indent + "]")) return i
+        if(line.startsWith(indent + "}")) return i
       }
       i += 1
     }

@@ -88,15 +88,11 @@ class DecompileTask extends CachedTask {
         if(entry.isDirectory || !entry.getName.endsWith(".java")){
           resourceMap.put(entry.getName, ByteStreams.toByteArray(zin))
         }else{
-          getLogger.info("PT {}", 1)
           val str = FernFlowerPatcher.processFile(new File(entry.getName).getName, new String(ByteStreams.toByteArray(zin), Charsets.UTF_8), fixInterfaces)
-          getLogger.info("PT {}", 2)
           sourceMap.put(entry.getName, str)
-          getLogger.info("PT {}", 3)
         }
       }
       entry = zin.getNextEntry
-      getLogger.info("PT {}", 4)
     }
     zin.close()
   }
