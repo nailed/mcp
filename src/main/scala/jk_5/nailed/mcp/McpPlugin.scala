@@ -1,5 +1,6 @@
 package jk_5.nailed.mcp
 
+import _root_.java.io.FileReader
 import org.gradle.api._
 import _root_.java.util
 import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
@@ -7,6 +8,7 @@ import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import jk_5.nailed.mcp.tasks._
 import scala.collection.convert.wrapAsScala._
 import org.gradle.api.tasks.Copy
+import com.google.gson.JsonParser
 
 /**
  * No description given
@@ -43,6 +45,7 @@ class McpPlugin extends Plugin[Project] {
     project.getExtensions.create(Constants.MCP_EXTENSION_NAME, classOf[NailedMCPExtension], project)
 
     project.getConfigurations.create(Constants.FERNFLOWER_CONFIGURATION)
+    project.getConfigurations.create(Constants.MINECRAFT_CONFIGURATION).extendsFrom(project.getConfigurations.getByName("compile"))
     project.getDependencies.add(Constants.FERNFLOWER_CONFIGURATION, "de.fernflower:fernflower:1.0")
 
     makeTask("downloadServer", classOf[DownloadTask]){ t =>
@@ -205,7 +208,14 @@ class McpPlugin extends Plugin[Project] {
   }
 
   def afterEvaluate(project: Project){
+    val reader = new FileReader(new DelayedFile(Constants.VERSION_INFO, project).call())
+    val json = new JsonParser().parse(reader).getAsJsonObject
+    reader.close()
 
+    val deps = project.getDependencies
+    for(dep <- json.getAsJsonArray("dependencies")){
+      deps.add(Constants.MINECRAFT_CONFIGURATION, dep)
+    }
   }
 
   @inline def makeTask(name: String): DefaultTask = makeTask(this.project, name, classOf[DefaultTask]){t => }

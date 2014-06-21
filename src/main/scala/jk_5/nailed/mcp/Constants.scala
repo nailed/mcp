@@ -17,6 +17,7 @@ object Constants {
   final val MC_SERVER_URL = "http://s3.amazonaws.com/Minecraft.Download/versions/{MC_VERSION}/minecraft_server.{MC_VERSION}.jar"
 
   final val FERNFLOWER_CONFIGURATION = "fernFlower"
+  final val MINECRAFT_CONFIGURATION = "minecraft"
 
   final val JAR_UNSHADED = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_unshaded/{MC_VERSION}/minecraft_unshaded-{MC_VERSION}.jar"
   final val JAR_SRG = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_srg/{MC_VERSION}/minecraft_srg-{MC_VERSION}.jar"
