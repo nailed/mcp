@@ -20,7 +20,7 @@ object DelayedResolver {
     val ext = project.getExtensions.getByName(Constants.MCP_EXTENSION_NAME).asInstanceOf[NailedMCPExtension]
 
     p = p.replace("{CACHE_DIR}", project.getGradle.getGradleUserHomeDir.getAbsolutePath.replace('\\', '/') + "/caches")
-    p = p.replace("{MAPPINGS_DIR}", project.getRootDir.getAbsolutePath.replace('\\', '/') + "/mappings")
+    p = p.replace("{MAPPINGS_DIR}", project.getRootDir.getAbsolutePath.replace('\\', '/') + "/config/{MC_VERSION}")
     p = p.replace("{BUILD_DIR}", project.getBuildDir.getAbsolutePath.replace('\\', '/'))
     p = p.replace("{PROJECT_DIR}", project.getRootDir.getAbsolutePath.replace('\\', '/'))
     if(ext.getMinecraftVersion != null){
