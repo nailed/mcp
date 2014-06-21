@@ -1,0 +1,25 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            //Because SpecialSource 1.7 is still beta
+            name = "sonatype"
+            url = "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+        maven {
+            //MinecraftForge repo for Srg2Source
+            name = "forge"
+            url = "http://files.minecraftforge.net/maven"
+        }
+    }
+    dependencies {
+        classpath "jk_5.nailed.mcp:mcp:1.0.0-SNAPSHOT"
+    }
+}
+
+apply plugin: "nailed-mcp"
+
+nailedMCP {
+    minecraftVersion = "1.7.2"
+}
