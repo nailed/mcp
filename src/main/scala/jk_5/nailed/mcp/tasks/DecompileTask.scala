@@ -3,7 +3,7 @@ package jk_5.nailed.mcp.tasks
 import jk_5.nailed.mcp.tasks.common.CachedTask
 import org.gradle.api.tasks.{OutputFile, TaskAction, InputFile}
 import jk_5.nailed.mcp.delayed.DelayedFile
-import java.io.{FileInputStream, FileOutputStream, File}
+import java.io._
 import groovy.lang.Closure
 import org.gradle.process.JavaExecSpec
 import jk_5.nailed.mcp.{NailedMCPExtension, Constants, Utils}
@@ -11,13 +11,15 @@ import java.util.zip.{ZipEntry, ZipOutputStream, ZipInputStream}
 import scala.collection.convert.wrapAsScala._
 import com.google.common.io.{Files, ByteStreams}
 import com.google.common.base.{Joiner, Charsets}
-import jk_5.nailed.mcp.patching.{ContextualPatch, FernFlowerPatcher}
+import jk_5.nailed.mcp.patching.{ClassNameCleanup, SourceCleanup, ContextualPatch, FernFlowerPatcher}
 import jk_5.nailed.mcp.patching.ContextualPatch.{PatchStatus, PatchReport, IContextProvider}
 import java.util
 import com.google.common.collect.{ArrayListMultimap, Lists}
 import org.gradle.api.logging.LogLevel
-import com.github.abrarsyed.jastyle.FileWildcardFilter
+import com.github.abrarsyed.jastyle.{OptParser, ASFormatter, FileWildcardFilter}
 import jk_5.nailed.mcp.tasks.common.CachedTask.Cached
+import java.util.Collections
+import java.util.regex.Pattern
 
 /**
  * No description given
@@ -27,6 +29,7 @@ import jk_5.nailed.mcp.tasks.common.CachedTask.Cached
 class DecompileTask extends CachedTask {
 
   @InputFile private var inJar: DelayedFile = _
+  @InputFile private var astyleConfig: DelayedFile = _
   @InputFile private var fernFlowerJar: File = _
   private var patch: DelayedFile = _
   @OutputFile @Cached private var outJar: DelayedFile = _
@@ -34,11 +37,14 @@ class DecompileTask extends CachedTask {
   private val sourceMap = new util.HashMap[String, String]()
   private val resourceMap = new util.HashMap[String, Array[Byte]]()
 
+  private final val BEFORE = Pattern.compile("(?m)((case|default).+(?:\\r\\n|\\r|\\n))(?:\\r\\n|\\r|\\n)")
+  private final val AFTER  = Pattern.compile("(?m)(?:\\r\\n|\\r|\\n)((?:\\r\\n|\\r|\\n)[ \\t]+(case|default))")
+
   @TaskAction def doTask(){
     val ffoutput = new File(getTemporaryDir, getInJar.getName)
 
     getLogger.lifecycle("Applying FernFlower", new Array[String](0))
-    decompile(getInJar, getTemporaryDir, getFernFlowerJar)
+    //decompile(getInJar, getTemporaryDir, getFernFlowerJar)
     readJar(ffoutput)
 
     getLogger.lifecycle("Applying MCP Patches", new Array[String](0))
@@ -47,6 +53,9 @@ class DecompileTask extends CachedTask {
     }else{
       applyPatchDirectory(getPatch)
     }
+
+    getLogger.lifecycle("Cleaning up & formatting sourcecode", new Array[String](0))
+    applySourceCleanup(getAStyleConfig)
 
     saveJar(getOutJar)
   }
@@ -133,6 +142,42 @@ class DecompileTask extends CachedTask {
     patch
   }
 
+  def applySourceCleanup(asConfig: File){
+    val formatter = new ASFormatter
+    val parser = new OptParser(formatter)
+    parser.parseOptionFile(asConfig)
+    val files = new util.ArrayList[String](sourceMap.keySet())
+    Collections.sort(files)
+    for(f <- files){
+      var content = sourceMap.get(f)
+
+      //Remove comments
+      content = SourceCleanup.stripComments(content)
+
+      //Fix imports
+      content = SourceCleanup.fixImports(content)
+
+      //Various other source code cleanup and fixes
+      content = SourceCleanup.cleanup(content)
+
+      //Apply AStyle
+      val reader = new StringReader(content)
+      val writer = new StringWriter
+      formatter.format(reader, writer)
+      reader.close()
+      writer.flush()
+      writer.close()
+      content = writer.toString
+
+      //Fix switch formatting
+      content = BEFORE.matcher(content).replaceAll("$1")
+      content = AFTER.matcher(content).replaceAll("$1")
+      content = ClassNameCleanup.renameClass(content)
+
+      sourceMap.put(f, content)
+    }
+  }
+
   private class McpPatchContextProvider(private val fileMap: util.Map[String, String]) extends IContextProvider {
 
     final val STRIP = 1
@@ -204,11 +249,13 @@ class DecompileTask extends CachedTask {
   }
 
   def setInJar(inJar: DelayedFile) = this.inJar = inJar
+  def setAStyleConfig(astyleConfig: DelayedFile) = this.astyleConfig = astyleConfig
   def setFernFlowerJar(fernFlowerJar: File) = this.fernFlowerJar = fernFlowerJar
   def setPatch(patch: DelayedFile) = this.patch = patch
   def setOutJar(outJar: DelayedFile) = this.outJar = outJar
 
   def getInJar = this.inJar.call()
+  def getAStyleConfig = this.astyleConfig.call()
   def getFernFlowerJar = this.fernFlowerJar
   def getPatch = this.patch.call()
   def getOutJar = this.outJar.call()

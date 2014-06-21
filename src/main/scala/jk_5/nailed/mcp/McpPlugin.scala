@@ -51,7 +51,7 @@ class McpPlugin extends Plugin[Project] {
     makeTask("removeShadedLibs", classOf[RemoveShadedLibsTask]){ t =>
       t.setConfig(Constants.SHADEDLIB_REMOVE_CONFIG)
       t.setInJar(Constants.SERVER_JAR_VANILLA)
-      t.setOutJar(Constants.JAR_NONSHADED)
+      t.setOutJar(Constants.JAR_UNSHADED)
       t.dependsOn("downloadServer")
     }
 
@@ -78,7 +78,7 @@ class McpPlugin extends Plugin[Project] {
     }
 
     makeTask("deobfuscate", classOf[DeobfuscateTask]){ t =>
-      t.setInJar(Constants.JAR_NONSHADED)
+      t.setInJar(Constants.JAR_UNSHADED)
       t.setOutJar(Constants.JAR_SRG)
       t.setSrg(Constants.NOTCH_2_SRG_SRG)
       t.setExceptorConfig(Constants.JOINED_EXC)
@@ -95,7 +95,8 @@ class McpPlugin extends Plugin[Project] {
       t.setFernFlowerJar(project.getConfigurations.getByName(Constants.FERNFLOWER_CONFIGURATION).getSingleFile)
       t.setPatch(Constants.MCP_PATCHES)
       t.setOutJar(Constants.ZIP_DECOMP)
-      t.dependsOn("deobfuscate", "generateMappings")
+      t.setAStyleConfig(Constants.ASTYLE_CONFIG)
+      //t.dependsOn("deobfuscate", "generateMappings")
     }
 
     /*makeTask("remapCleanSource", classOf[RemapSourceTask]){ t =>
