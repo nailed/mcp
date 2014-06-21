@@ -1,4 +1,4 @@
-package jk_5.nailed.mcp.tasks.common;
+package jk_5.nailed.mcp.tasks;
 
 import java.io.File;
 import java.lang.annotation.ElementType;

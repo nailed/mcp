@@ -1,8 +1,8 @@
-package jk_5.nailed.mcp.tasks.common
+package jk_5.nailed.mcp.tasks
 
 import jk_5.nailed.mcp.delayed.DelayedFile
 import org.gradle.api.tasks.{TaskAction, OutputFile, InputFile}
-import jk_5.nailed.mcp.tasks.common.CachedTask.Cached
+import CachedTask.Cached
 import scala.collection.mutable
 import java.io.{FileOutputStream, FileInputStream, File}
 import java.util.zip.ZipInputStream

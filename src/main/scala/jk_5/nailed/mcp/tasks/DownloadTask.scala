@@ -1,4 +1,4 @@
-package jk_5.nailed.mcp.tasks.common
+package jk_5.nailed.mcp.tasks
 
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputFile
@@ -6,7 +6,7 @@ import org.gradle.api.tasks.TaskAction
 
 import java.io._
 import java.net.{HttpURLConnection, URL}
-import jk_5.nailed.mcp.tasks.common.CachedTask.Cached
+import CachedTask.Cached
 import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
 import com.google.common.io.ByteStreams
 

@@ -1,9 +1,8 @@
 package jk_5.nailed.mcp.tasks
 
-import jk_5.nailed.mcp.tasks.common.CachedTask
 import org.gradle.api.tasks.{TaskAction, OutputFile, InputFile}
 import jk_5.nailed.mcp.delayed.DelayedFile
-import jk_5.nailed.mcp.tasks.common.CachedTask.Cached
+import CachedTask.Cached
 import scala.collection.mutable
 import scala.collection.convert.wrapAsScala._
 import com.google.common.io.{ByteStreams, Files}
@@ -43,7 +42,7 @@ class RemoveShadedLibsTask extends CachedTask {
 
       for(e <- inFile.entries()){
         val name = e.getName
-        if(!name.endsWith(".class") || name.startsWith(".") || !this.remove.exists(n => name.startsWith(n))){
+        if((!name.endsWith(".class") && !name.endsWith(".java")) || name.startsWith(".") || !this.remove.exists(n => name.startsWith(n))){
           val newEntry = new ZipEntry(name)
           outStream.putNextEntry(newEntry)
           outStream.write(ByteStreams.toByteArray(inFile.getInputStream(e)))

@@ -3,10 +3,9 @@ package jk_5.nailed.mcp.tasks
 import _root_.scala.Some
 import scala.collection.mutable
 import scala.collection.convert.wrapAsScala._
-import jk_5.nailed.mcp.tasks.common.CachedTask
 import org.gradle.api.tasks._
 import jk_5.nailed.mcp.delayed.DelayedFile
-import jk_5.nailed.mcp.tasks.common.CachedTask.Cached
+import CachedTask.Cached
 import com.google.common.collect.Lists
 import java.io.{FileOutputStream, BufferedOutputStream, File}
 import net.md_5.specialsource._

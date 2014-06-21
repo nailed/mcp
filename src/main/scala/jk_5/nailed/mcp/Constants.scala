@@ -20,8 +20,11 @@ object Constants {
 
   final val JAR_UNSHADED = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_unshaded/{MC_VERSION}/minecraft_unshaded-{MC_VERSION}.jar"
   final val JAR_SRG = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_srg/{MC_VERSION}/minecraft_srg-{MC_VERSION}.jar"
+  final val DEOBF_DATA = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_srg/{MC_VERSION}/deobfuscation_data-{MC_VERSION}.lzma"
   final val ZIP_DECOMP = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_decomp/{MC_VERSION}/minecraft_decomp-{MC_VERSION}.zip"
   final val REMAPPED_CLEAN = "{BUILD_DIR}/tmp/clean.jar"
+  final val ZIP_PATCHED = "{BUILD_DIR}/tmp/dirtyPatched.zip"
+  final val ZIP_REMAPPED_DIRTY = "{BUILD_DIR}/tmp/dirtyRemapped.zip"
 
   //Mappings
   final val JOINED_SRG = "{MAPPINGS_DIR}/joined.srg"
@@ -34,6 +37,7 @@ object Constants {
   final val MCP_PATCHES = "{MAPPINGS_DIR}/patches"
   final val SHADEDLIB_REMOVE_CONFIG = "{MAPPINGS_DIR}/removeClasses.cfg"
   final val ASTYLE_CONFIG = "{MAPPINGS_DIR}/astyle.cfg"
+  final val VERSION_INFO = "{MAPPINGS_DIR}/version.json"
 
   //Generated files
   final val NOTCH_2_SRG_SRG = "{BUILD_DIR}/tmp/mappings/notch2srg.srg"
@@ -43,5 +47,19 @@ object Constants {
   final val SRG_EXC = "{BUILD_DIR}/tmp/mappings/srg.exc"
   final val MCP_EXC = "{BUILD_DIR}/tmp/mappings/mcp.exc"
 
+  final val NAILED_JAVA_SOURCES = "{PROJECT_DIR}/src/main/java"
+  final val NAILED_SCALA_SOURCES = "{PROJECT_DIR}/src/main/scala"
   final val NAILED_RESOURCES = "{PROJECT_DIR}/src/main/resources"
+  final val NAILED_JAVA_TEST_SOURCES = "{PROJECT_DIR}/src/test/java"
+  final val NAILED_SCALA_TEST_SOURCES = "{PROJECT_DIR}/src/test/scala"
+  final val NAILED_TEST_RESOURCES = "{PROJECT_DIR}/src/test/scala"
+  final val PROJECT_CLEAN = "{PROJECT_DIR}/minecraft/Clean"
+  final val PROJECT_DIRTY = "{PROJECT_DIR}/minecraft/Nailed"
+  final val MINECRAFT_CLEAN_SOURCES = PROJECT_CLEAN + "/src/main/java"
+  final val MINECRAFT_CLEAN_RESOURCES = PROJECT_CLEAN + "/src/main/resources"
+  final val MINECRAFT_DIRTY_SOURCES = PROJECT_DIRTY + "/src/main/java"
+  final val MINECRAFT_DIRTY_RESOURCES = PROJECT_DIRTY + "/src/main/resources"
+  final val NAILED_PATCH_DIR = "{PROJECT_DIR}/patches"
+
+  final val MINECRAFT_MAVEN_URL = "https://libraries.minecraft.net"
 }

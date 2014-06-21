@@ -1,10 +1,9 @@
 package jk_5.nailed.mcp.tasks
 
-import jk_5.nailed.mcp.tasks.common.CachedTask
 import org.gradle.api.tasks.{TaskAction, OutputFile, InputFiles, InputFile}
 import jk_5.nailed.mcp.delayed.DelayedFile
 import com.google.common.collect.Lists
-import jk_5.nailed.mcp.tasks.common.CachedTask.Cached
+import CachedTask.Cached
 import java.io.File
 import java.util
 import scala.collection.mutable

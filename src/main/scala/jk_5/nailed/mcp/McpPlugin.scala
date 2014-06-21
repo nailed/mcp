@@ -2,11 +2,11 @@ package jk_5.nailed.mcp
 
 import org.gradle.api._
 import _root_.java.util
-import jk_5.nailed.mcp.tasks.common.DownloadTask
 import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import jk_5.nailed.mcp.tasks._
 import scala.collection.convert.wrapAsScala._
+import org.gradle.api.tasks.Copy
 
 /**
  * No description given
@@ -16,6 +16,8 @@ import scala.collection.convert.wrapAsScala._
 class McpPlugin extends Plugin[Project] {
 
   var project: Project = _
+
+  final val javaFiles = Array("**.java", "*.java", "**/*.java")
 
   override def apply(project: Project){
     this.project = project
@@ -83,11 +85,16 @@ class McpPlugin extends Plugin[Project] {
       t.setSrg(Constants.NOTCH_2_SRG_SRG)
       t.setExceptorConfig(Constants.JOINED_EXC)
       t.setExceptorJson(Constants.EXC_JSON)
-      //t.addAccessTransformer(Constants.NAILED_RESOURCES + "/nailed_at.cfg")
       t.setApplyMarkers(applyMarkers = true)
       t.setFieldCsv(Constants.FIELDS_CSV)
       t.setMethodCsv(Constants.METHODS_CSV)
       t.dependsOn("removeShadedLibs", "generateMappings")
+
+      for(f <- project.fileTree(toDelayedFile(Constants.NAILED_RESOURCES).call()).getFiles){
+        if(f.getPath.endsWith("_at.cfg")){
+          t.addAccessTransformer(f)
+        }
+      }
     }
 
     makeTask("decompile", classOf[DecompileTask]){ t =>
@@ -107,26 +114,101 @@ class McpPlugin extends Plugin[Project] {
       t.setParamCsv(Constants.PARAMS_CSV)
       t.setDoesCache(false)
       t.noJavadocs()
-      //t.dependsOn("decompile")
-    }
-
-    /*makeTask("patchSource", classOf[PatchSourceTask]){ t =>
       t.dependsOn("decompile")
-    }*/
-
-    /*makeTask("remapDirtySource", classOf[RemapSourceTask]){ t =>
-      t.dependsOn("patchSource")
-    }*/
-
-    makeTask("setupNailed", classOf[DefaultTask]){ t =>
-
     }
+
+    makeTask("patchDirtySource", classOf[PatchSourceJarTask]){ t =>
+      t.setInJar(Constants.ZIP_DECOMP)
+      t.setOutJar(Constants.ZIP_PATCHED)
+      t.addStage("Nailed", Constants.NAILED_PATCH_DIR)
+      t.setDoesCache(false)
+      t.setMaxFuzz(2)
+      t.dependsOn("decompile")
+    }
+
+    makeTask("remapDirtySource", classOf[RemapSourceTask]){ t =>
+      t.setInJar(Constants.ZIP_PATCHED)
+      t.setOutJar(Constants.ZIP_REMAPPED_DIRTY)
+      t.setMethodCsv(Constants.METHODS_CSV)
+      t.setFieldCsv(Constants.FIELDS_CSV)
+      t.setParamCsv(Constants.PARAMS_CSV)
+      t.setDoesCache(false)
+      t.noJavadocs()
+      t.dependsOn("patchDirtySource")
+    }
+
+    makeTask("extractMinecraftResources", classOf[ExtractTask]){ t =>
+      t.exclude(this.javaFiles: _*)
+      t.setIncludeEmptyDirs(includeEmptyDirs = false)
+      t.from(Constants.REMAPPED_CLEAN)
+      t.into(Constants.MINECRAFT_CLEAN_RESOURCES)
+      t.dependsOn("remapCleanSource" /*, "extractWorkspace"*/)
+    }
+
+    makeTask("extractMinecraftSources", classOf[ExtractTask]){ t =>
+      t.include(this.javaFiles: _*)
+      t.setIncludeEmptyDirs(includeEmptyDirs = false)
+      t.from(Constants.REMAPPED_CLEAN)
+      t.into(Constants.MINECRAFT_CLEAN_SOURCES)
+      t.dependsOn("extractMinecraftResources")
+    }
+
+    makeTask("extractNailedResources", classOf[ExtractTask]){ t =>
+      t.exclude(this.javaFiles: _*)
+      t.from(Constants.ZIP_REMAPPED_DIRTY)
+      t.into(Constants.MINECRAFT_DIRTY_RESOURCES)
+      t.dependsOn("remapDirtySource")
+    }
+
+    makeTask("compressDeobfData", classOf[CompressLzmaTask]){ t =>
+      t.setInput(Constants.NOTCH_2_SRG_SRG)
+      t.setOutput(Constants.DEOBF_DATA)
+      t.dependsOn("generateMappings")
+    }
+
+    makeTask("copyDeobfData", classOf[Copy]){ t =>
+      t.from(Constants.DEOBF_DATA)
+      t.into(Constants.MINECRAFT_DIRTY_RESOURCES)
+      t.dependsOn("extractNailedResources", "compressDeobfData")
+    }
+
+    makeTask("extractNailedSources", classOf[ExtractTask]){ t =>
+      t.include(this.javaFiles: _*)
+      t.from(Constants.ZIP_REMAPPED_DIRTY)
+      t.into(Constants.MINECRAFT_DIRTY_SOURCES)
+      t.dependsOn("copyDeobfData")
+    }
+
+    makeTask("generateCleanProject", classOf[GenerateProjectTask]){ t =>
+      t.setTargetDir(Constants.PROJECT_CLEAN)
+      t.setVersionInfo(Constants.VERSION_INFO)
+      //t.dependsOn("extractWorkspace")
+    }
+
+    makeTask("generateNailedProject", classOf[GenerateProjectTask]){ t =>
+      t.setTargetDir(Constants.PROJECT_DIRTY)
+      t.setVersionInfo(Constants.VERSION_INFO)
+
+      t.addJavaSource(Constants.NAILED_JAVA_SOURCES)
+      t.addScalaSource(Constants.NAILED_SCALA_SOURCES)
+      t.addJavaTestSource(Constants.NAILED_JAVA_TEST_SOURCES)
+      t.addScalaTestSource(Constants.NAILED_SCALA_TEST_SOURCES)
+      t.addResource(Constants.MINECRAFT_DIRTY_RESOURCES)
+      t.addResource(Constants.NAILED_RESOURCES)
+      t.addTestResource(Constants.NAILED_TEST_RESOURCES)
+    }
+
+    makeTask("generateProjects").dependsOn("generateCleanProject", "generateNailedProject")
+    //makeTask("idea").dependsOn("ideaClean", "ideaNailed")
+
+    makeTask("setupNailed").dependsOn("extractNailedSources", "generateProjects", "extractMinecraftSources")
   }
 
   def afterEvaluate(project: Project){
 
   }
 
+  @inline def makeTask(name: String): DefaultTask = makeTask(this.project, name, classOf[DefaultTask]){t => }
   @inline def makeTask[T <: Task](name: String, cl: Class[T])(configure: (T) => Unit): T = makeTask(this.project, name, cl)(configure)
   def makeTask[T <: Task](project: Project, name: String, cl: Class[T])(configure: (T) => Unit): T = {
     val map = new util.HashMap[String, AnyRef]()

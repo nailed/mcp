@@ -1,6 +1,5 @@
 package jk_5.nailed.mcp.tasks
 
-import jk_5.nailed.mcp.tasks.common.CachedTask
 import org.gradle.api.tasks.{OutputFile, TaskAction, InputFile}
 import jk_5.nailed.mcp.delayed.DelayedFile
 import java.io._
@@ -17,7 +16,7 @@ import java.util
 import com.google.common.collect.{ArrayListMultimap, Lists}
 import org.gradle.api.logging.LogLevel
 import com.github.abrarsyed.jastyle.{OptParser, ASFormatter, FileWildcardFilter}
-import jk_5.nailed.mcp.tasks.common.CachedTask.Cached
+import CachedTask.Cached
 import java.util.Collections
 import java.util.regex.Pattern
 

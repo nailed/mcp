@@ -1,6 +1,5 @@
 package jk_5.nailed.mcp.tasks
 
-import jk_5.nailed.mcp.tasks.common.EditJarTask
 import org.gradle.api.tasks.InputFile
 import jk_5.nailed.mcp.delayed.DelayedFile
 import scala.collection.{mutable, immutable}
