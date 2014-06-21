@@ -21,6 +21,7 @@ object Constants {
   final val JAR_UNSHADED = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_unshaded/{MC_VERSION}/minecraft_unshaded-{MC_VERSION}.jar"
   final val JAR_SRG = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_srg/{MC_VERSION}/minecraft_srg-{MC_VERSION}.jar"
   final val ZIP_DECOMP = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_decomp/{MC_VERSION}/minecraft_decomp-{MC_VERSION}.zip"
+  final val REMAPPED_CLEAN = "{BUILD_DIR}/tmp/clean.jar"
 
   //Mappings
   final val JOINED_SRG = "{MAPPINGS_DIR}/joined.srg"
@@ -31,6 +32,8 @@ object Constants {
   final val PACKAGES_CSV = "{MAPPINGS_DIR}/packages.csv"
   final val EXC_JSON = "{MAPPINGS_DIR}/exceptor.json"
   final val MCP_PATCHES = "{MAPPINGS_DIR}/patches"
+  final val SHADEDLIB_REMOVE_CONFIG = "{MAPPINGS_DIR}/removeClasses.cfg"
+  final val ASTYLE_CONFIG = "{MAPPINGS_DIR}/astyle.cfg"
 
   //Generated files
   final val NOTCH_2_SRG_SRG = "{BUILD_DIR}/tmp/mappings/notch2srg.srg"
@@ -41,6 +44,4 @@ object Constants {
   final val MCP_EXC = "{BUILD_DIR}/tmp/mappings/mcp.exc"
 
   final val NAILED_RESOURCES = "{PROJECT_DIR}/src/main/resources"
-  final val SHADEDLIB_REMOVE_CONFIG = "{PROJECT_DIR}/removeClasses.cfg"
-  final val ASTYLE_CONFIG = "{MAPPINGS_DIR}/astyle.cfg"
 }

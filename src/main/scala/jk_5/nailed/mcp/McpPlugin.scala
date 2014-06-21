@@ -5,7 +5,7 @@ import _root_.java.util
 import jk_5.nailed.mcp.tasks.common.DownloadTask
 import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
-import jk_5.nailed.mcp.tasks.{DecompileTask, RemoveShadedLibsTask, DeobfuscateTask, GenerateMappingsTask}
+import jk_5.nailed.mcp.tasks._
 import scala.collection.convert.wrapAsScala._
 
 /**
@@ -99,9 +99,16 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("deobfuscate", "generateMappings")
     }
 
-    /*makeTask("remapCleanSource", classOf[RemapSourceTask]){ t =>
-      t.dependsOn("decompile")
-    }*/
+    makeTask("remapCleanSource", classOf[RemapSourceTask]){ t =>
+      t.setInJar(Constants.ZIP_DECOMP)
+      t.setOutJar(Constants.REMAPPED_CLEAN)
+      t.setMethodCsv(Constants.METHODS_CSV)
+      t.setFieldCsv(Constants.FIELDS_CSV)
+      t.setParamCsv(Constants.PARAMS_CSV)
+      t.setDoesCache(false)
+      t.noJavadocs()
+      //t.dependsOn("decompile")
+    }
 
     /*makeTask("patchSource", classOf[PatchSourceTask]){ t =>
       t.dependsOn("decompile")
