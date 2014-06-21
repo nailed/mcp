@@ -44,7 +44,7 @@ class DecompileTask extends CachedTask {
     val ffoutput = new File(getTemporaryDir, getInJar.getName)
 
     getLogger.lifecycle("Applying FernFlower", new Array[String](0))
-    //decompile(getInJar, getTemporaryDir, getFernFlowerJar)
+    decompile(getInJar, getTemporaryDir, getFernFlowerJar)
     readJar(ffoutput)
 
     getLogger.lifecycle("Applying MCP Patches", new Array[String](0))

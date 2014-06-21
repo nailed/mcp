@@ -96,7 +96,7 @@ class McpPlugin extends Plugin[Project] {
       t.setPatch(Constants.MCP_PATCHES)
       t.setOutJar(Constants.ZIP_DECOMP)
       t.setAStyleConfig(Constants.ASTYLE_CONFIG)
-      //t.dependsOn("deobfuscate", "generateMappings")
+      t.dependsOn("deobfuscate", "generateMappings")
     }
 
     /*makeTask("remapCleanSource", classOf[RemapSourceTask]){ t =>
