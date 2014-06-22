@@ -136,7 +136,7 @@ class GenerateMappingsTask extends CachedTask {
       notchToSrg.newLine()
 
       val temp = e.getValue.name.substring(e.getValue.name.lastIndexOf('/')+1)
-      val mcpName = if(fields.contains(temp)) e.getValue.toString.replace(temp, methods.get(temp).get) else e.getValue
+      val mcpName = if(methods.contains(temp)) e.getValue.toString.replace(temp, methods.get(temp).get) else e.getValue
 
       notchToMcp.write("MD: " + e.getKey + " " + mcpName)
       notchToMcp.newLine()
