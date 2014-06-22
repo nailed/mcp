@@ -26,6 +26,7 @@ object Constants {
   final val REMAPPED_CLEAN = "{BUILD_DIR}/tmp/clean.jar"
   final val ZIP_PATCHED = "{BUILD_DIR}/tmp/dirtyPatched.zip"
   final val ZIP_REMAPPED_DIRTY = "{BUILD_DIR}/tmp/dirtyRemapped.zip"
+  final val RUNTIME_DIR = "{PROJECT_DIR}/runtime"
 
   //Mappings
   final val JOINED_SRG = "{MAPPINGS_DIR}/joined.srg"

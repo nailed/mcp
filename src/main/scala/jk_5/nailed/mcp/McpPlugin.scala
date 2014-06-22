@@ -9,6 +9,10 @@ import jk_5.nailed.mcp.tasks._
 import scala.collection.convert.wrapAsScala._
 import org.gradle.api.tasks.Copy
 import com.google.gson.JsonParser
+import org.gradle.plugins.ide.idea.model.IdeaModel
+import groovy.lang.Closure
+import org.w3c.dom.{Element, Document}
+import org.gradle.api.plugins.JavaPluginConvention
 
 /**
  * No description given
@@ -32,11 +36,23 @@ class McpPlugin extends Plugin[Project] {
 
     project.allprojects(new Action[Project] {
       override def execute(project: Project){
+        project.getRepositories.maven(new Action[MavenArtifactRepository]{
+          override def execute(repo: MavenArtifactRepository){
+            repo.setName("minecraft")
+            repo.setUrl(Constants.MINECRAFT_MAVEN_URL)
+          }
+        })
         project.getRepositories.mavenCentral
         project.getRepositories.maven(new Action[MavenArtifactRepository]{
           override def execute(repo: MavenArtifactRepository){
             repo.setName("reening")
             repo.setUrl("http://maven.reening.nl")
+          }
+        })
+        project.getRepositories.maven(new Action[MavenArtifactRepository]{
+          override def execute(repo: MavenArtifactRepository){
+            repo.setName("forge")
+            repo.setUrl("http://files.minecraftforge.net/maven")
           }
         })
       }
@@ -45,7 +61,8 @@ class McpPlugin extends Plugin[Project] {
     project.getExtensions.create(Constants.MCP_EXTENSION_NAME, classOf[NailedMCPExtension], project)
 
     project.getConfigurations.create(Constants.FERNFLOWER_CONFIGURATION)
-    project.getConfigurations.create(Constants.MINECRAFT_CONFIGURATION).extendsFrom(project.getConfigurations.getByName("compile"))
+    val cfg = project.getConfigurations.create(Constants.MINECRAFT_CONFIGURATION)
+    project.getConfigurations.getByName("compile").extendsFrom(cfg)
     project.getDependencies.add(Constants.FERNFLOWER_CONFIGURATION, "de.fernflower:fernflower:1.0")
 
     makeTask("downloadServer", classOf[DownloadTask]){ t =>
@@ -150,7 +167,6 @@ class McpPlugin extends Plugin[Project] {
 
     makeTask("extractMinecraftSources", classOf[ExtractTask]){ t =>
       t.include(this.javaFiles: _*)
-      t.setIncludeEmptyDirs(includeEmptyDirs = false)
       t.from(Constants.REMAPPED_CLEAN)
       t.into(Constants.MINECRAFT_CLEAN_SOURCES)
       t.dependsOn("extractMinecraftResources")
@@ -158,6 +174,7 @@ class McpPlugin extends Plugin[Project] {
 
     makeTask("extractNailedResources", classOf[ExtractTask]){ t =>
       t.exclude(this.javaFiles: _*)
+      t.setIncludeEmptyDirs(includeEmptyDirs = false)
       t.from(Constants.ZIP_REMAPPED_DIRTY)
       t.into(Constants.MINECRAFT_DIRTY_RESOURCES)
       t.dependsOn("remapDirtySource")
@@ -182,29 +199,36 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("copyDeobfData")
     }
 
-    makeTask("generateCleanProject", classOf[GenerateProjectTask]){ t =>
-      t.setTargetDir(Constants.PROJECT_CLEAN)
-      t.setVersionInfo(Constants.VERSION_INFO)
-      //t.dependsOn("extractWorkspace")
+    makeTask("setupNailed").dependsOn("extractNailedSources", "extractMinecraftSources")
+
+    val ideaConv = project.getExtensions.getByName("idea").asInstanceOf[IdeaModel]
+    ideaConv.getModule.getExcludeDirs.addAll(project.files(".gradle", "build", ".idea").getFiles)
+    ideaConv.getModule.setDownloadJavadoc(true)
+    ideaConv.getModule.setDownloadSources(true)
+
+    if(ideaConv.getWorkspace.getIws != null){
+      ideaConv.getWorkspace.getIws.withXml(new Closure[AnyRef](this, null){
+        override def call(args: AnyRef*): AnyRef = {
+          val root = this.getDelegate.asInstanceOf[XmlProvider].asElement
+          val doc = root.getOwnerDocument
+          try{
+            injectIdeaRunConfigs(doc, project.getProjectDir.getCanonicalPath)
+          }catch{
+            case e: Exception => e.printStackTrace()
+          }
+          null
+        }
+      })
     }
 
-    makeTask("generateNailedProject", classOf[GenerateProjectTask]){ t =>
-      t.setTargetDir(Constants.PROJECT_DIRTY)
-      t.setVersionInfo(Constants.VERSION_INFO)
+    val javaConv = project.getConvention.getPlugins.get("java").asInstanceOf[JavaPluginConvention]
 
-      t.addJavaSource(Constants.NAILED_JAVA_SOURCES)
-      t.addScalaSource(Constants.NAILED_SCALA_SOURCES)
-      t.addJavaTestSource(Constants.NAILED_JAVA_TEST_SOURCES)
-      t.addScalaTestSource(Constants.NAILED_SCALA_TEST_SOURCES)
-      t.addResource(Constants.MINECRAFT_DIRTY_RESOURCES)
-      t.addResource(Constants.NAILED_RESOURCES)
-      t.addTestResource(Constants.NAILED_TEST_RESOURCES)
-    }
+    val main = javaConv.getSourceSets.getByName("main")
+    main.getJava.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_SOURCES))
+    main.getResources.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_RESOURCES))
 
-    makeTask("generateProjects").dependsOn("generateCleanProject", "generateNailedProject")
-    //makeTask("idea").dependsOn("ideaClean", "ideaNailed")
-
-    makeTask("setupNailed").dependsOn("extractNailedSources", "generateProjects", "extractMinecraftSources")
+    javaConv.setSourceCompatibility("1.6")
+    javaConv.setTargetCompatibility("1.6")
   }
 
   def afterEvaluate(project: Project){
@@ -214,8 +238,51 @@ class McpPlugin extends Plugin[Project] {
 
     val deps = project.getDependencies
     for(dep <- json.getAsJsonArray("dependencies")){
-      deps.add(Constants.MINECRAFT_CONFIGURATION, dep)
+      deps.add(Constants.MINECRAFT_CONFIGURATION, dep.getAsString)
     }
+  }
+
+  def injectIdeaRunConfigs(doc: Document, module: String){
+    val list = doc.getElementsByTagName("component")
+    val ext = project.getExtensions.getByType(classOf[NailedMCPExtension])
+    var root: Element = null
+    for(i <- 0 until list.getLength){
+      val e = list.item(i).asInstanceOf[Element]
+      if(e.getAttribute("name") == "RunManager"){
+        root = e
+      }
+    }
+    val child = add(root, "configuration",
+      "default", "false",
+      "name", "Run Nailed Server",
+      "type", "Application",
+      "factoryName", "Application",
+      "default", "true"
+    )
+    add(child, "option", "name", "MAIN_CLASS_NAME", "value", ext.getMainClass)
+    add(child, "option", "name", "VM_PARAMETERS", "value", "-server -Xms512M -Xmx512M -XX:+AggressiveOpts -XX:+OptimizeStringConcat -XX:+UseFastAccessorMethods -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -Djava.awt.headless=true")
+    add(child, "option", "name", "PROGRAM_PARAMETERS", "value", "file://" + toDelayedFile(Constants.RUNTIME_DIR).call().getCanonicalPath.replace(module, "$PROJECT_DIR$"))
+    add(child, "option", "name", "ALTERNATIVE_JRE_PATH_ENABLED", "value", "false")
+    add(child, "option", "name", "ALTERNATIVE_JRE_PATH", "value", "")
+    add(child, "option", "name", "ENABLE_SWING_INSPECTOR", "value", "false")
+    add(child, "option", "name", "ENV_VARIABLES")
+    add(child, "option", "name", "PASS_PARENT_ENVS", "value", "true")
+    add(child, "module", "name", project.getExtensions.getByName("idea").asInstanceOf[IdeaModel].getModule.getName)
+    add(child, "envs")
+    add(child, "RunnerSettings", "RunnerId", "Run")
+    add(child, "ConfigurationWrapper", "RunnerId", "Run")
+    add(child, "method")
+  }
+
+  def add(parent: Element, name: String, values: String*): Element = {
+    val e = parent.getOwnerDocument.createElement(name)
+    var i = 0
+    while(i < values.length){
+      e.setAttribute(values(i), values(i + 1))
+      i += 2
+    }
+    parent.appendChild(e)
+    e
   }
 
   @inline def makeTask(name: String): DefaultTask = makeTask(this.project, name, classOf[DefaultTask]){t => }
