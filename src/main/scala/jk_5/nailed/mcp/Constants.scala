@@ -1,6 +1,7 @@
 package jk_5.nailed.mcp
 
 import scala.util.Properties
+import groovy.lang.Closure
 
 /**
  * No description given
@@ -18,6 +19,7 @@ object Constants {
 
   final val FERNFLOWER_CONFIGURATION = "fernFlower"
   final val MINECRAFT_CONFIGURATION = "minecraft"
+  final val NAILED_CONFIGURATION = "nailed"
 
   final val JAR_UNSHADED = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_unshaded/{MC_VERSION}/minecraft_unshaded-{MC_VERSION}.jar"
   final val JAR_SRG = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_srg/{MC_VERSION}/minecraft_srg-{MC_VERSION}.jar"
@@ -27,6 +29,7 @@ object Constants {
   final val ZIP_PATCHED = "{BUILD_DIR}/tmp/dirtyPatched.zip"
   final val ZIP_REMAPPED_DIRTY = "{BUILD_DIR}/tmp/dirtyRemapped.zip"
   final val RUNTIME_DIR = "{PROJECT_DIR}/runtime"
+  final val RUNTIME_VERSIONFILE = "{BUILD_DIR}/tmp/nailedversion.json"
 
   //Mappings
   final val JOINED_SRG = "{MAPPINGS_DIR}/joined.srg"
@@ -64,4 +67,8 @@ object Constants {
   final val NAILED_PATCH_DIR = "{PROJECT_DIR}/patches"
 
   final val MINECRAFT_MAVEN_URL = "https://libraries.minecraft.net"
+
+  final val CALL_FALSE = new Closure[Boolean](null){
+    override def call(arguments: scala.Any): Boolean = false
+  }
 }

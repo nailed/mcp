@@ -61,8 +61,10 @@ class McpPlugin extends Plugin[Project] {
     project.getExtensions.create(Constants.MCP_EXTENSION_NAME, classOf[NailedMCPExtension], project)
 
     project.getConfigurations.create(Constants.FERNFLOWER_CONFIGURATION)
-    val cfg = project.getConfigurations.create(Constants.MINECRAFT_CONFIGURATION)
-    project.getConfigurations.getByName("compile").extendsFrom(cfg)
+    val mcCfg = project.getConfigurations.create(Constants.MINECRAFT_CONFIGURATION)
+    val nailedCfg = project.getConfigurations.create(Constants.NAILED_CONFIGURATION)
+    project.getConfigurations.getByName("compile").extendsFrom(mcCfg)
+    project.getConfigurations.getByName("compile").extendsFrom(nailedCfg)
     project.getDependencies.add(Constants.FERNFLOWER_CONFIGURATION, "de.fernflower:fernflower:1.0")
 
     makeTask("downloadServer", classOf[DownloadTask]){ t =>
@@ -188,8 +190,9 @@ class McpPlugin extends Plugin[Project] {
 
     makeTask("copyDeobfData", classOf[Copy]){ t =>
       t.from(Constants.DEOBF_DATA)
+      t.from(Constants.RUNTIME_VERSIONFILE)
       t.into(Constants.MINECRAFT_DIRTY_RESOURCES)
-      t.dependsOn("extractNailedResources", "compressDeobfData")
+      t.dependsOn("extractNailedResources", "compressDeobfData", "generateVersionFile")
     }
 
     makeTask("extractNailedSources", classOf[ExtractTask]){ t =>
@@ -197,6 +200,14 @@ class McpPlugin extends Plugin[Project] {
       t.from(Constants.ZIP_REMAPPED_DIRTY)
       t.into(Constants.MINECRAFT_DIRTY_SOURCES)
       t.dependsOn("copyDeobfData")
+    }
+
+    makeTask("generateVersionFile", classOf[GenerateVersionFileTask]){ t =>
+      t.setInfoFile(Constants.VERSION_INFO)
+      t.setOutput(Constants.RUNTIME_VERSIONFILE)
+      t.addConfiguration(mcCfg)
+      t.addConfiguration(nailedCfg)
+      t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
     }
 
     makeTask("setupNailed").dependsOn("extractNailedSources", "extractMinecraftSources")
@@ -252,25 +263,49 @@ class McpPlugin extends Plugin[Project] {
         root = e
       }
     }
+    {
+      val child = add(root, "configuration",
+        "default", "false",
+        "name", "Run Nailed Server",
+        "type", "Application",
+        "factoryName", "Application"
+      )
+      add(child, "option", "name", "MAIN_CLASS_NAME", "value", ext.getMainClass)
+      add(child, "option", "name", "VM_PARAMETERS", "value", "-server -Xms512M -Xmx512M -XX:+AggressiveOpts -XX:+OptimizeStringConcat -XX:+UseFastAccessorMethods -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -Djava.awt.headless=true")
+      add(child, "option", "name", "PROGRAM_PARAMETERS", "value", "nogui")
+      add(child, "option", "name", "WORKING_DIRECTORY", "value", "file://" + toDelayedFile(Constants.RUNTIME_DIR).call().getCanonicalPath.replace(module, "$PROJECT_DIR$"))
+      add(child, "option", "name", "ALTERNATIVE_JRE_PATH_ENABLED", "value", "false")
+      add(child, "option", "name", "ALTERNATIVE_JRE_PATH", "value", "")
+      add(child, "option", "name", "ENABLE_SWING_INSPECTOR", "value", "false")
+      add(child, "option", "name", "ENV_VARIABLES")
+      add(child, "option", "name", "PASS_PARENT_ENVS", "value", "true")
+      add(child, "module", "name", project.getExtensions.getByName("idea").asInstanceOf[IdeaModel].getModule.getName)
+      add(child, "envs")
+      add(child, "RunnerSettings", "RunnerId", "Run")
+      add(child, "ConfigurationWrapper", "RunnerId", "Run")
+      add(child, "method")
+    }
+    addGradleRunConfig(root, "Update Patches", "generatePatches")
+    addGradleRunConfig(root, "Clean Dirty Sources", "cleanDirty")
+    addGradleRunConfig(root, "Setup Nailed", "setupNailed")
+  }
+
+  def addGradleRunConfig(root: Element, name: String, task: String){
     val child = add(root, "configuration",
       "default", "false",
-      "name", "Run Nailed Server",
-      "type", "Application",
-      "factoryName", "Application",
-      "default", "true"
+      "name", name,
+      "type", "GradleRunConfiguration",
+      "factoryName", "Gradle"
     )
-    add(child, "option", "name", "MAIN_CLASS_NAME", "value", ext.getMainClass)
-    add(child, "option", "name", "VM_PARAMETERS", "value", "-server -Xms512M -Xmx512M -XX:+AggressiveOpts -XX:+OptimizeStringConcat -XX:+UseFastAccessorMethods -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -Djava.awt.headless=true")
-    add(child, "option", "name", "PROGRAM_PARAMETERS", "value", "file://" + toDelayedFile(Constants.RUNTIME_DIR).call().getCanonicalPath.replace(module, "$PROJECT_DIR$"))
-    add(child, "option", "name", "ALTERNATIVE_JRE_PATH_ENABLED", "value", "false")
-    add(child, "option", "name", "ALTERNATIVE_JRE_PATH", "value", "")
-    add(child, "option", "name", "ENABLE_SWING_INSPECTOR", "value", "false")
-    add(child, "option", "name", "ENV_VARIABLES")
-    add(child, "option", "name", "PASS_PARENT_ENVS", "value", "true")
-    add(child, "module", "name", project.getExtensions.getByName("idea").asInstanceOf[IdeaModel].getModule.getName)
-    add(child, "envs")
-    add(child, "RunnerSettings", "RunnerId", "Run")
-    add(child, "ConfigurationWrapper", "RunnerId", "Run")
+    val s = add(root, "ExternalSystemSettings")
+    add(s, "option", "name", "externalProjectPath", "value", "$PROJECT_DIR$/build.gradle")
+    add(s, "option", "name", "externalSystemIdString", "value", "GRADLE")
+    add(s, "option", "name", "scriptParameters", "value", "")
+    val desc = add(s, "option", "name", "taskDescriptions")
+    add(desc, "list")
+    val names = add(s, "option", "name", "taskNames")
+    add(add(names, "list"), "option", "value", task)
+    add(s, "option", "name", "vmOptions", "value", "")
     add(child, "method")
   }
 
