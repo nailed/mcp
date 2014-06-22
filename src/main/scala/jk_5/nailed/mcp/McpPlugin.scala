@@ -210,7 +210,34 @@ class McpPlugin extends Plugin[Project] {
       t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
     }
 
-    makeTask("setupNailed").dependsOn("extractNailedSources", "extractMinecraftSources")
+    makeTask("generateRangeMap", classOf[ExtractRangeMapTask]){ t =>
+      t.addConfiguration(mcCfg)
+      t.addConfiguration(nailedCfg)
+      t.addInput(Constants.MINECRAFT_DIRTY_SOURCES)
+      t.setRangeMap(Constants.RANGEMAP)
+    }
+
+    makeTask("retroMapSources", classOf[ApplySrg2SourceTask]){ t =>
+      t.addInput(Constants.MINECRAFT_DIRTY_SOURCES)
+      t.setOutput(Constants.PATCH_DIRTY)
+      t.addSrg(toDelayedFile(Constants.MCP_2_SRG_SRG))
+      t.addExc(toDelayedFile(Constants.MCP_EXC))
+      t.addExc(toDelayedFile(Constants.SRG_EXC))
+      t.setRangeMap(Constants.RANGEMAP)
+      t.dependsOn("generateMappings", "generateRangeMap")
+    }
+
+    makeTask("generatePatches", classOf[GeneratePatchesTask]){ t =>
+      t.setPatchDir(Constants.NAILED_PATCH_DIR)
+      t.setOriginal(Constants.ZIP_DECOMP)
+      t.setChanged(Constants.PATCH_DIRTY)
+      t.setOriginalPrefix("clean")
+      t.setChangedPrefix("dirty")
+      t.setGroup("Nailed-MCP")
+      t.dependsOn("retroMapSources")
+    }
+
+    makeTask("setupNailed").dependsOn("extractNailedSources", "extractMinecraftSources").setGroup("Nailed-MCP")
 
     val ideaConv = project.getExtensions.getByName("idea").asInstanceOf[IdeaModel]
     ideaConv.getModule.getExcludeDirs.addAll(project.files(".gradle", "build", ".idea").getFiles)

@@ -30,6 +30,8 @@ object Constants {
   final val ZIP_REMAPPED_DIRTY = "{BUILD_DIR}/tmp/dirtyRemapped.zip"
   final val RUNTIME_DIR = "{PROJECT_DIR}/runtime"
   final val RUNTIME_VERSIONFILE = "{BUILD_DIR}/tmp/nailedversion.json"
+  final val RANGEMAP = "{BUILD_DIR}/tmp/rangemap.txt"
+  final val PATCH_DIRTY = "{BUILD_DIR}/tmp/dirty-patch-base.zip"
 
   //Mappings
   final val JOINED_SRG = "{MAPPINGS_DIR}/joined.srg"
