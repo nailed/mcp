@@ -1,15 +1,16 @@
 package jk_5.nailed.mcp.patching
 
-import com.google.code.regexp.Pattern
-import com.google.common.base.Splitter
-import com.google.common.base.Strings
-import com.google.common.collect.Lists
 import java.util
-import java.util.{Collections, Locale, Comparator}
-import scala.collection.mutable
-import scala.collection.convert.wrapAsScala._
-import scala.collection.JavaConverters._
+import java.util.{Collections, Comparator, Locale}
+
+import com.google.code.regexp.Pattern
+import com.google.common.base.{Splitter, Strings}
+import com.google.common.collect.Lists
 import jk_5.nailed.mcp.Constants
+
+import scala.collection.JavaConverters._
+import scala.collection.convert.wrapAsScala._
+import scala.collection.mutable
 
 object ClassNameCleanup {
 
@@ -28,8 +29,7 @@ object ClassNameCleanup {
     val lines = text.split("(\r\n|\r|\n)")
     val output = Lists.newArrayListWithCapacity[String](lines.length)
     var method: ClassNameCleanup.MethodInfo = null
-    var break = false
-    for(line <- lines if !break){
+    for(line <- lines){
       var matcher = METHOD_REG.matcher(line)
       val found = matcher.find
       if(!line.endsWith(";") && !line.endsWith(",") && found){
@@ -38,7 +38,8 @@ object ClassNameCleanup {
         var invalid = false
         val args = matcher.group("parameters")
         if(args != null){
-          for(str <- Splitter.on(',').trimResults.omitEmptyStrings.split(args)){
+          var break = false
+          for(str <- Splitter.on(',').trimResults.omitEmptyStrings.split(args) if !break){
             if(str.indexOf(' ') == -1){
               invalid = true
               break = true
@@ -47,7 +48,7 @@ object ClassNameCleanup {
             }
           }
         }
-        if(invalid || METHOD_DEC_END.matcher(line).find && !break){
+        if(invalid || METHOD_DEC_END.matcher(line).find){
           if(method.parent != null){
             method.parent.children.remove(method.parent.children.indexOf(method))
           }
@@ -56,10 +57,9 @@ object ClassNameCleanup {
             output.add(line)
           }
         }
-      }else if(method != null && (method.ENDING == line)){
+      }else if(method != null && method.ENDING == line){
         method.lines += line
         if (method.parent == null) {
-          import scala.collection.JavaConversions._
           for (l <- Splitter.on(Constants.NEWLINE).split(method.rename(null))) {
             output.add(l)
           }
@@ -121,7 +121,7 @@ object ClassNameCleanup {
             else o1.compareTo(o2)
         })
         for (s <- sorted) {
-          renames.put(s, namer.getName(unnamed.get(s).getOrElse(null), s))
+          renames.put(s, namer.getName(unnamed.get(s) orNull, s))
         }
       }
       val buf = new StringBuilder
@@ -140,7 +140,7 @@ object ClassNameCleanup {
         Collections.sort(sortedKeys, COMPARATOR)
         for (key <- sortedKeys) {
           if (VAR.matcher(key).matches()) {
-            body = body.replace(key, renames.get(key).getOrElse(null))
+            body = body.replace(key, renames.get(key) orNull)
           }
         }
       }
