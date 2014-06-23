@@ -1,9 +1,12 @@
 package jk_5.nailed.mcp.patching
 
 import java.util
+
 import com.google.code.regexp.{Matcher, Pattern}
+import com.google.common.base.Strings
 import jk_5.nailed.mcp.{Constants, Utils}
-import com.google.common.base.{Strings, Joiner}
+
+import scala.collection.convert.wrapAsScala._
 
 /**
  * No description given
@@ -39,7 +42,7 @@ object FernFlowerPatcher {
     lines.addAll(Utils.lines(content))
 
     processClass(lines, "", 0, "", "")
-    content = Joiner.on(Constants.NEWLINE).join(lines)
+    content = lines.mkString(Constants.NEWLINE)
 
     content = content.replaceAll(REPEATED_NEWLINES, Constants.NEWLINE)
     content = content.replaceAll(EMPTY_SUPER, "")
