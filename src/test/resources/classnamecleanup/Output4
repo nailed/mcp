@@ -1,0 +1,10 @@
+
+public class Test {
+
+    public void test(){
+        String[] astring = new String[2];
+        astring[0] = "test";
+        String[] astring1 = new String[2];
+        astring1[0] = "test";
+    }
+}

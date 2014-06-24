@@ -197,7 +197,7 @@ class ClassNameCleanup(val parent: ClassNameCleanup = null) {
       else if(last.contains(findtype.toLowerCase(Locale.ENGLISH))) findtype.toLowerCase(Locale.ENGLISH)
       else if(remap.contains(typ)) remap.get(typ).get
       else null
-    if(Strings.isNullOrEmpty(index) && ClassNameCleanup.CAPS_START.matcher(typ).find() || ClassNameCleanup.ARRAY.matcher(typ).find()){
+    if(Strings.isNullOrEmpty(index) && (ClassNameCleanup.CAPS_START.matcher(typ).find() || ClassNameCleanup.ARRAY.matcher(typ).find())){
       typ = typ.replace("...", "[]")
       while(typ.contains("[][]")) typ = typ.replaceAll("\\[\\]\\[\\]", "[]")
       var name = typ.toLowerCase(Locale.ENGLISH).replace(".", "")

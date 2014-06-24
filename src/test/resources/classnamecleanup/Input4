@@ -1,0 +1,10 @@
+
+public class Test {
+
+    public void test(){
+        String[] var1 = new String[2];
+        var1[0] = "test";
+        String[] var2 = new String[2];
+        var2[0] = "test";
+    }
+}

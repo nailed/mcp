@@ -14,6 +14,7 @@ class ClassNameCleanupTest {
   @Test def testClass1() = check("classnamecleanup/Input", "classnamecleanup/Output")
   @Test def testClass2() = check("classnamecleanup/Input2", "classnamecleanup/Output2")
   @Test def testClass3() = check("classnamecleanup/Input3", "classnamecleanup/Output3")
+  @Test def testClass4() = check("classnamecleanup/Input4", "classnamecleanup/Output4")
 
   def check(in: String, out: String){
     val input = ClassNameCleanup.renameClass(readResource(in))
