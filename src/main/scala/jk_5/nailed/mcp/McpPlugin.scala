@@ -1,18 +1,20 @@
 package jk_5.nailed.mcp
 
 import _root_.java.io.FileReader
-import org.gradle.api._
 import _root_.java.util
-import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository
-import jk_5.nailed.mcp.tasks._
-import scala.collection.convert.wrapAsScala._
-import org.gradle.api.tasks.Copy
+
 import com.google.gson.JsonParser
-import org.gradle.plugins.ide.idea.model.IdeaModel
 import groovy.lang.Closure
-import org.w3c.dom.{Element, Document}
+import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
+import jk_5.nailed.mcp.tasks._
+import org.gradle.api._
+import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.tasks.Copy
+import org.gradle.plugins.ide.idea.model.IdeaModel
+import org.w3c.dom.{Document, Element}
+
+import scala.collection.convert.wrapAsScala._
 
 /**
  * No description given
@@ -192,6 +194,7 @@ class McpPlugin extends Plugin[Project] {
       t.from(Constants.DEOBF_DATA)
       t.from(Constants.RUNTIME_VERSIONFILE)
       t.into(Constants.MINECRAFT_DIRTY_RESOURCES)
+      t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
       t.dependsOn("extractNailedResources", "compressDeobfData", "generateVersionFile")
     }
 
