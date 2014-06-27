@@ -32,7 +32,7 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 
 import jk_5.nailed.mcp.Constants;
-import jk_5.nailed.mcp.Utils;
+import jk_5.nailed.mcp.HashUtils;
 
 import groovy.lang.Closure;
 
@@ -185,7 +185,7 @@ public abstract class CachedTask extends DefaultTask {
     private String getHashes(Annotated output, List<Annotated> inputs, Object instance) throws NoSuchFieldException, IllegalAccessException, NoSuchAlgorithmException, NoSuchMethodException, SecurityException, IllegalArgumentException, InvocationTargetException {
         LinkedList<String> hashes = new LinkedList<String>();
 
-        hashes.addAll(Utils.hashAll(getProject().file(output.getValue(instance))));
+        hashes.addAll(HashUtils.hashAll(getProject().file(output.getValue(instance))));
 
         for(Annotated input : inputs){
             AnnotatedElement m = input.getElement();
@@ -194,15 +194,15 @@ public abstract class CachedTask extends DefaultTask {
             if(val == null && m.isAnnotationPresent(Optional.class)){
                 hashes.add("null");
             }else if(m.isAnnotationPresent(InputFile.class)){
-                hashes.add(Utils.hash(getProject().file(input.getValue(instance))));
-                getLogger().info(Utils.hash(getProject().file(input.getValue(instance))) + " " + input.getValue(instance));
+                hashes.add(HashUtils.hash(getProject().file(input.getValue(instance))));
+                getLogger().info(HashUtils.hash(getProject().file(input.getValue(instance))) + " " + input.getValue(instance));
             }else if(m.isAnnotationPresent(InputDirectory.class)){
                 File dir = (File) input.getValue(instance);
-                hashes.addAll(Utils.hashAll(dir));
+                hashes.addAll(HashUtils.hashAll(dir));
             }else if(m.isAnnotationPresent(InputFiles.class)){
                 FileCollection files = getProject().files(input.getValue(instance));
                 for(File file : files.getFiles()){
-                    String hash = Utils.hash(file);
+                    String hash = HashUtils.hash(file);
                     hashes.add(hash);
                     getLogger().info(hash + " " + input.getValue(instance));
                 }
@@ -216,20 +216,20 @@ public abstract class CachedTask extends DefaultTask {
                 }
 
                 if(obj instanceof String){
-                    hashes.add(Utils.hash((String) obj));
-                    getLogger().info(Utils.hash((String) obj) + " " + (String) obj);
+                    hashes.add(HashUtils.hash((String) obj));
+                    getLogger().info(HashUtils.hash((String) obj) + " " + (String) obj);
                 }else if(obj instanceof File){
                     File file = (File) obj;
                     if(file.isDirectory()){
                         List<File> files = Arrays.asList(file.listFiles());
                         Collections.sort(files);
                         for(File i : files){
-                            hashes.add(Utils.hash(i));
-                            getLogger().info(Utils.hash(i) + " " + i);
+                            hashes.add(HashUtils.hash(i));
+                            getLogger().info(HashUtils.hash(i) + " " + i);
                         }
                     }else{
-                        hashes.add(Utils.hash(file));
-                        getLogger().info(Utils.hash(file) + " " + file);
+                        hashes.add(HashUtils.hash(file));
+                        getLogger().info(HashUtils.hash(file) + " " + file);
                     }
                 }else{
                     hashes.add(obj.toString());

@@ -1,19 +1,21 @@
 package jk_5.nailed.mcp.tasks
 
-import jk_5.nailed.mcp.patching.ContextualPatch
-import jk_5.nailed.mcp.Constants
 import java.io.File
 import java.util
-import com.google.common.io.Files
+
 import com.google.common.base.Charsets
 import com.google.common.collect.Lists
-import scala.collection.{immutable, mutable}
-import scala.collection.convert.wrapAsScala._
-import org.gradle.api.file.FileCollection
+import com.google.common.io.Files
+import jk_5.nailed.mcp.Constants
 import jk_5.nailed.mcp.delayed.DelayedFile
-import org.gradle.api.tasks.{InputFiles, Input}
-import org.gradle.api.logging.LogLevel
+import jk_5.nailed.mcp.patching.ContextualPatch
 import jk_5.nailed.mcp.patching.ContextualPatch.PatchStatus
+import org.gradle.api.file.FileCollection
+import org.gradle.api.logging.LogLevel
+import org.gradle.api.tasks.{Input, InputFiles}
+
+import scala.collection.convert.wrapAsScala._
+import scala.collection.{immutable, mutable}
 
 /**
  * No description given
@@ -72,7 +74,7 @@ class PatchSourceJarTask extends EditJarTask {
           for(hunk <- report.getHunks){
             if(!hunk.getStatus.isSuccess){
               failed += 1
-              getLogger.error("  " + hunk.getHunkID + ": " + (if(hunk.getFailure != null) hunk.getFailure.getMessage else "") + " @ " + hunk.getIndex())
+              getLogger.error("  " + hunk.getHunkID + ": " + (if(hunk.getFailure != null) hunk.getFailure.getMessage else "") + " @ " + hunk.getIndex)
               Files.append("++++ REJECTED PATCH %d\n".format(hunk.getHunkID), reject, Charsets.UTF_8)
               Files.append(hunk.hunk.lines.mkString(Constants.NEWLINE), reject, Charsets.UTF_8)
               Files.append("\n++++ END PATCH\n", reject, Charsets.UTF_8)

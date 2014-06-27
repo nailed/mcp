@@ -191,6 +191,7 @@ class McpPlugin extends Plugin[Project] {
     }
 
     makeTask("copyDeobfData", classOf[Copy]){ t =>
+      t.include("*")
       t.from(Constants.DEOBF_DATA)
       t.from(Constants.RUNTIME_VERSIONFILE)
       t.into(Constants.MINECRAFT_DIRTY_RESOURCES)
@@ -234,8 +235,8 @@ class McpPlugin extends Plugin[Project] {
       t.setPatchDir(Constants.NAILED_PATCH_DIR)
       t.setOriginal(Constants.ZIP_DECOMP)
       t.setChanged(Constants.PATCH_DIRTY)
-      t.setOriginalPrefix("clean")
-      t.setChangedPrefix("dirty")
+      t.setOriginalPrefix("../src-base/minecraft")
+      t.setChangedPrefix("../src-work/minecraft")
       t.setGroup("Nailed-MCP")
       t.dependsOn("retroMapSources")
     }

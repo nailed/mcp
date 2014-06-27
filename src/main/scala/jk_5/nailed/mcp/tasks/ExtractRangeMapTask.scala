@@ -1,21 +1,23 @@
 package jk_5.nailed.mcp.tasks
 
+import java.io.File
+
+import com.google.code.regexp.{Matcher, Pattern}
+import com.google.common.base.Charsets
+import com.google.common.io.{ByteStreams, Files}
+import jk_5.nailed.mcp.delayed.DelayedFile
+import jk_5.nailed.mcp.io.{CachedInputSupplier, SequencedInputSupplier}
+import jk_5.nailed.mcp.{Constants, HashUtils}
+import net.minecraftforge.srg2source.ast.RangeExtractor
+import net.minecraftforge.srg2source.util.io.{FolderSupplier, InputSupplier, ZipInputSupplier}
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.{OutputFile, TaskAction, InputFiles}
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
-import scala.collection.mutable
+import org.gradle.api.tasks.{InputFiles, OutputFile, TaskAction}
+
 import scala.collection.JavaConverters._
 import scala.collection.convert.wrapAsScala._
-import jk_5.nailed.mcp.delayed.DelayedFile
-import java.io.File
-import net.minecraftforge.srg2source.util.io.{FolderSupplier, ZipInputSupplier, InputSupplier}
-import jk_5.nailed.mcp.io.{CachedInputSupplier, SequencedInputSupplier}
-import com.google.common.io.{ByteStreams, Files}
-import com.google.common.base.Charsets
-import jk_5.nailed.mcp.{Utils, Constants}
-import net.minecraftforge.srg2source.ast.RangeExtractor
-import org.gradle.api.artifacts.Configuration
-import com.google.code.regexp.{Pattern, Matcher}
+import scala.collection.mutable
 
 /**
  * No description given
@@ -81,7 +83,7 @@ class ExtractRangeMapTask extends DefaultTask {
       val is = supplier.getInput(s)
       val array = ByteStreams.toByteArray(is)
       is.close()
-      val entry = new CacheEntry(s, root, Utils.hash(array))
+      val entry = new CacheEntry(s, root, HashUtils.hash(array))
       genCache.add(entry)
       if(!mapExists || !cache.contains(entry)) cachedSuppler.addFile(s, root, array)
     }
