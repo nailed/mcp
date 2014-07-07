@@ -1,28 +1,26 @@
 package jk_5.nailed.mcp.tasks
 
-import _root_.scala.Some
-import scala.collection.mutable
-import scala.collection.convert.wrapAsScala._
-import org.gradle.api.tasks._
-import jk_5.nailed.mcp.delayed.DelayedFile
-import CachedTask.Cached
-import com.google.common.collect.Lists
-import java.io.{FileOutputStream, BufferedOutputStream, File}
-import net.md_5.specialsource._
-import com.google.common.io.{ByteStreams, LineProcessor, Files}
-import com.google.common.base.Charsets
-import net.md_5.specialsource.provider.{JarProvider, JointProvider}
-import jk_5.nailed.mcp.json.JsonFactory
-import jk_5.nailed.mcp.{NailedMCPExtension, Constants}
-import de.oceanlabs.mcp.mcinjector.MCInjectorImpl
-import org.objectweb.asm.Opcodes.ACC_FINAL
-import org.objectweb.asm.Opcodes.ACC_PRIVATE
-import org.objectweb.asm.Opcodes.ACC_PROTECTED
-import org.objectweb.asm.Opcodes.ACC_PUBLIC
-import java.util.zip.{ZipEntry, ZipFile, ZipOutputStream}
-import org.objectweb.asm.{ClassWriter, Opcodes, ClassReader}
-import org.objectweb.asm.tree.{MethodNode, FieldNode, ClassNode}
+import java.io.{BufferedOutputStream, File, FileOutputStream}
 import java.util
+import java.util.zip.{ZipEntry, ZipFile, ZipOutputStream}
+
+import com.google.common.base.Charsets
+import com.google.common.collect.Lists
+import com.google.common.io.{ByteStreams, Files, LineProcessor}
+import de.oceanlabs.mcp.mcinjector.MCInjectorImpl
+import jk_5.nailed.mcp.delayed.DelayedFile
+import jk_5.nailed.mcp.json.JsonFactory
+import jk_5.nailed.mcp.tasks.CachedTask.Cached
+import jk_5.nailed.mcp.{Constants, NailedMCPExtension}
+import net.md_5.specialsource._
+import net.md_5.specialsource.provider.{JarProvider, JointProvider}
+
+import scala.collection.convert.wrapAsScala._
+import scala.collection.mutable
+import org.gradle.api.tasks._
+import org.objectweb.asm.Opcodes.{ACC_FINAL, ACC_PRIVATE, ACC_PROTECTED, ACC_PUBLIC}
+import org.objectweb.asm.tree.{ClassNode, FieldNode, MethodNode}
+import org.objectweb.asm.{ClassReader, ClassWriter, Opcodes}
 
 /**
  * No description given
@@ -93,7 +91,7 @@ class DeobfuscateTask extends CachedTask {
           val idx = pts(1).indexOf('(')
           var start = pts(1)
           var end = ""
-          if(idx != 1){
+          if(idx != -1){
             start = pts(1).substring(0, idx)
             end = pts(1).substring(idx)
           }
