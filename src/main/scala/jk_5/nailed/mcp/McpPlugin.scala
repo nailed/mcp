@@ -5,7 +5,7 @@ import _root_.java.util
 
 import com.google.gson.JsonParser
 import groovy.lang.Closure
-import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedFileTree, DelayedString}
+import jk_5.nailed.mcp.delayed.{CopyFilter, DelayedFile, DelayedFileTree, DelayedString}
 import jk_5.nailed.mcp.tasks._
 import org.gradle.api._
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
@@ -264,9 +264,9 @@ class McpPlugin extends Plugin[Project] {
       //TODO: remap access transformer
       t.from(toDelayedZipFileTree(Constants.BINPATCH_TMP))
       t.from(project.zipTree(apiProject.getTasks.getByName("jar").property("archivePath")))
-      t.from(toDelayedFileTree(Constants.NAILED_RESOURCES))
-      t.from(Constants.RUNTIME_VERSIONFILE)
-      t.from(Constants.DEOBF_DATA)
+      t.from(toDelayedFileTree(Constants.NAILED_RESOURCES), new CopyFilter(null, "!*_at.cfg")) //Don't copy AccessTransformers. We need to copy them from their remapped location
+      t.from(toDelayedFile(Constants.RUNTIME_VERSIONFILE))
+      t.from(toDelayedFile(Constants.DEOBF_DATA))
       t.setIncludeEmptyDirs(false)
       t.dependsOn("generateBinaryPatches", /*"createChangelog",*/ "generateVersionFile", ":api:jar")
       project.getArtifacts.add("archives", t)
