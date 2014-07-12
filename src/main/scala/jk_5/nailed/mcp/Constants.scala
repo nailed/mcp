@@ -1,5 +1,7 @@
 package jk_5.nailed.mcp
 
+import java.io.OutputStream
+
 import groovy.lang.Closure
 
 import scala.util.Properties
@@ -34,6 +36,8 @@ object Constants {
   final val RUNTIME_VERSIONFILE = "{BUILD_DIR}/tmp/nailedversion.json"
   final val RANGEMAP = "{BUILD_DIR}/tmp/rangemap.txt"
   final val PATCH_DIRTY = "{BUILD_DIR}/tmp/dirty-patch-base.zip"
+  final val REOBF_TMP = "{BUILD_DIR}/tmp/recompiledObfuscated.jar"
+  final val BINPATCH_TMP = "{BUILD_DIR}/tmp/binpatches.jar"
 
   //Mappings
   final val JOINED_SRG = "{MAPPINGS_DIR}/joined.srg"
@@ -59,6 +63,9 @@ object Constants {
   final val NAILED_JAVA_SOURCES = "{PROJECT_DIR}/src/main/java"
   final val NAILED_SCALA_SOURCES = "{PROJECT_DIR}/src/main/scala"
   final val NAILED_RESOURCES = "{PROJECT_DIR}/src/main/resources"
+  final val NAILED_JAVA_API_SOURCES = "{PROJECT_DIR}/api/src/main/java"
+  final val NAILED_SCALA_API_SOURCES = "{PROJECT_DIR}/api/src/main/scala"
+  final val NAILED_API_RESOURCES = "{PROJECT_DIR}/api/src/main/resources"
   final val NAILED_JAVA_TEST_SOURCES = "{PROJECT_DIR}/src/test/java"
   final val NAILED_SCALA_TEST_SOURCES = "{PROJECT_DIR}/src/test/scala"
   final val NAILED_TEST_RESOURCES = "{PROJECT_DIR}/src/test/scala"
@@ -74,5 +81,9 @@ object Constants {
 
   final val CALL_FALSE = new Closure[Boolean](null){
     override def call(arguments: scala.Any): Boolean = false
+  }
+
+  def getNullStream = new OutputStream{
+    override def write(b: Int){}
   }
 }

@@ -5,12 +5,13 @@ import _root_.java.util
 
 import com.google.gson.JsonParser
 import groovy.lang.Closure
-import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
+import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedFileTree, DelayedString}
 import jk_5.nailed.mcp.tasks._
 import org.gradle.api._
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.w3c.dom.{Document, Element}
 
@@ -237,7 +238,64 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("retroMapSources")
     }
 
+    makeTask[ReobfuscateTask]("reobfuscate"){ t =>
+      t.setSrg(Constants.MCP_2_NOTCH_SRG)
+      t.setExc(Constants.SRG_EXC)
+      t.setReverse(reverse = false)
+      t.setPreFFJar(Constants.JAR_SRG)
+      t.setOutJar(Constants.REOBF_TMP)
+      t.setMethodCsv(Constants.METHODS_CSV)
+      t.setFieldCsv(Constants.FIELDS_CSV)
+      t.dependsOn("jar", "extractNailedSources", "generateMappings")
+    }
+
+    makeTask[GenerateBinaryPatchesTask]("generateBinaryPatches"){ t =>
+      t.setCleanJar(Constants.SERVER_JAR_VANILLA)
+      t.setDirtyJar(Constants.REOBF_TMP)
+      t.setOutJar(Constants.BINPATCH_TMP)
+      t.setDeobfuscationData(Constants.DEOBF_DATA)
+      t.setSrg(Constants.NOTCH_2_SRG_SRG)
+      t.addPatchList(toDelayedFileTree(Constants.NAILED_PATCH_DIR))
+      t.dependsOn("reobfuscate", "compressDeobfData")
+    }
+
+    makeTask[Jar]("packageServer"){ t =>
+      t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
+      //TODO: remap access transformer
+      t.from(toDelayedZipFileTree(Constants.BINPATCH_TMP))
+      t.from(project.zipTree(apiProject.getTasks.getByName("jar").property("archivePath")))
+      t.from(toDelayedFileTree(Constants.NAILED_RESOURCES))
+      t.from(Constants.RUNTIME_VERSIONFILE)
+      t.from(Constants.DEOBF_DATA)
+      t.setIncludeEmptyDirs(false)
+      t.dependsOn("generateBinaryPatches", /*"createChangelog",*/ "generateVersionFile", ":api:jar")
+      project.getArtifacts.add("archives", t)
+    }
+
+    makeTask[Jar]("packageScaladoc"){ t =>
+      t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
+      t.setClassifier("scaladoc")
+      t.from("build/docs/scaladoc")
+      t.dependsOn("scaladoc")
+      project.getArtifacts.add("archives", t)
+    }
+
+    makeTask[Jar]("packageSource"){ t =>
+      t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
+      t.setClassifier("sources")
+      t.from(toDelayedFileTree(Constants.NAILED_JAVA_SOURCES))
+      t.from(toDelayedFileTree(Constants.NAILED_SCALA_SOURCES))
+      t.from(toDelayedFileTree(Constants.NAILED_RESOURCES))
+      t.from(toDelayedFileTree(Constants.NAILED_JAVA_API_SOURCES))
+      t.from(toDelayedFileTree(Constants.NAILED_SCALA_API_SOURCES))
+      t.from(toDelayedFileTree(Constants.NAILED_API_RESOURCES))
+      project.getArtifacts.add("archives", t)
+    }
+
     metaTask("setupNailed").dependsOn("extractNailedSources", "extractMinecraftSources").setGroup("Nailed-MCP")
+    metaTask("buildPackages").dependsOn("packageServer", "packageScaladoc", "packageSource").setGroup("Nailed-MCP")
+
+    project.getTasks.getByName("uploadArchives").dependsOn("buildPackages")
 
     val ideaConv = project.getExtensions.getByName("idea").asInstanceOf[IdeaModel]
     ideaConv.getModule.getExcludeDirs.addAll(project.files(".gradle", "build", ".idea").getFiles)
@@ -261,9 +319,11 @@ class McpPlugin extends Plugin[Project] {
 
     val javaConv = project.getConvention.getPlugins.get("java").asInstanceOf[JavaPluginConvention]
 
-    val main = javaConv.getSourceSets.getByName("main")
-    main.getJava.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_SOURCES))
-    main.getResources.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_RESOURCES))
+    //val main = javaConv.getSourceSets.getByName("main")
+    ////val mainScala = main.asInstanceOf[ScalaSourceSet]
+    //main.getJava.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_SOURCES))
+    ////mainScala.getScala.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_SOURCES))
+    //main.getResources.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_RESOURCES))
 
     //project.getDependencies.add("compile", project.getDependencies.module(apiProject))
 
@@ -368,4 +428,6 @@ class McpPlugin extends Plugin[Project] {
 
   implicit def toDelayedString(s: String): DelayedString = new DelayedString(s, this.project)
   implicit def toDelayedFile(s: String): DelayedFile = new DelayedFile(s, this.project)
+  def toDelayedFileTree(s: String): DelayedFileTree = new DelayedFileTree(s, this.project)
+  def toDelayedZipFileTree(s: String): DelayedFileTree = new DelayedFileTree(s, this.project, true)
 }
