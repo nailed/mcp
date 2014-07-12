@@ -1,7 +1,8 @@
 package jk_5.nailed.mcp
 
-import scala.util.Properties
 import groovy.lang.Closure
+
+import scala.util.Properties
 
 /**
  * No description given
@@ -20,6 +21,7 @@ object Constants {
   final val FERNFLOWER_CONFIGURATION = "fernFlower"
   final val MINECRAFT_CONFIGURATION = "minecraft"
   final val NAILED_CONFIGURATION = "nailed"
+  final val API_SUBPROJECT = "api"
 
   final val JAR_UNSHADED = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_unshaded/{MC_VERSION}/minecraft_unshaded-{MC_VERSION}.jar"
   final val JAR_SRG = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_srg/{MC_VERSION}/minecraft_srg-{MC_VERSION}.jar"

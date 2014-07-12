@@ -38,25 +38,19 @@ class McpPlugin extends Plugin[Project] {
 
     project.allprojects(new Action[Project] {
       override def execute(project: Project){
-        project.getRepositories.maven(new Action[MavenArtifactRepository]{
-          override def execute(repo: MavenArtifactRepository){
-            repo.setName("minecraft")
-            repo.setUrl(Constants.MINECRAFT_MAVEN_URL)
-          }
-        })
+        addMavenRepo(project){ r =>
+          r.setName("minecraft")
+          r.setUrl(Constants.MINECRAFT_MAVEN_URL)
+        }
         project.getRepositories.mavenCentral
-        project.getRepositories.maven(new Action[MavenArtifactRepository]{
-          override def execute(repo: MavenArtifactRepository){
-            repo.setName("reening")
-            repo.setUrl("http://maven.reening.nl")
-          }
-        })
-        project.getRepositories.maven(new Action[MavenArtifactRepository]{
-          override def execute(repo: MavenArtifactRepository){
-            repo.setName("forge")
-            repo.setUrl("http://files.minecraftforge.net/maven")
-          }
-        })
+        addMavenRepo(project){ r =>
+          r.setName("reening")
+          r.setUrl("http://maven.reening.nl")
+        }
+        addMavenRepo(project){ r =>
+          r.setName("forge")
+          r.setUrl("http://files.minecraftforge.net/maven")
+        }
       }
     })
 
@@ -69,19 +63,21 @@ class McpPlugin extends Plugin[Project] {
     project.getConfigurations.getByName("compile").extendsFrom(nailedCfg)
     project.getDependencies.add(Constants.FERNFLOWER_CONFIGURATION, "de.fernflower:fernflower:1.0")
 
-    makeTask("downloadServer", classOf[DownloadTask]){ t =>
+    val apiProject = project.getSubprojects.find(_.getName == Constants.API_SUBPROJECT).get
+
+    makeTask[DownloadTask]("downloadServer"){ t =>
       t.setOutput(Constants.SERVER_JAR_VANILLA)
       t.setUrl(Constants.MC_SERVER_URL)
     }
 
-    makeTask("removeShadedLibs", classOf[RemoveShadedLibsTask]){ t =>
+    makeTask[RemoveShadedLibsTask]("removeShadedLibs"){ t =>
       t.setConfig(Constants.SHADEDLIB_REMOVE_CONFIG)
       t.setInJar(Constants.SERVER_JAR_VANILLA)
       t.setOutJar(Constants.JAR_UNSHADED)
       t.dependsOn("downloadServer")
     }
 
-    makeTask("generateMappings", classOf[GenerateMappingsTask]){ t =>
+    makeTask[GenerateMappingsTask]("generateMappings"){ t =>
       t.setInSrg(Constants.JOINED_SRG)
       t.setInExc(Constants.JOINED_EXC)
       t.setMethodCsv(Constants.METHODS_CSV)
@@ -103,7 +99,7 @@ class McpPlugin extends Plugin[Project] {
       }
     }
 
-    makeTask("deobfuscate", classOf[DeobfuscateTask]){ t =>
+    makeTask[DeobfuscateTask]("deobfuscate"){ t =>
       t.setInJar(Constants.JAR_UNSHADED)
       t.setOutJar(Constants.JAR_SRG)
       t.setSrg(Constants.NOTCH_2_SRG_SRG)
@@ -121,7 +117,7 @@ class McpPlugin extends Plugin[Project] {
       }
     }
 
-    makeTask("decompile", classOf[DecompileTask]){ t =>
+    makeTask[DecompileTask]("decompile"){ t =>
       t.setInJar(Constants.JAR_SRG)
       t.setFernFlowerJar(project.getConfigurations.getByName(Constants.FERNFLOWER_CONFIGURATION).getSingleFile)
       t.setPatch(Constants.MCP_PATCHES)
@@ -130,7 +126,7 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("deobfuscate", "generateMappings")
     }
 
-    makeTask("remapCleanSource", classOf[RemapSourceTask]){ t =>
+    makeTask[RemapSourceTask]("remapCleanSource"){ t =>
       t.setInJar(Constants.ZIP_DECOMP)
       t.setOutJar(Constants.REMAPPED_CLEAN)
       t.setMethodCsv(Constants.METHODS_CSV)
@@ -141,7 +137,7 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("decompile")
     }
 
-    makeTask("patchDirtySource", classOf[PatchSourceJarTask]){ t =>
+    makeTask[PatchSourceJarTask]("patchDirtySource"){ t =>
       t.setInJar(Constants.ZIP_DECOMP)
       t.setOutJar(Constants.ZIP_PATCHED)
       t.addStage("Nailed", Constants.NAILED_PATCH_DIR)
@@ -150,7 +146,7 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("decompile")
     }
 
-    makeTask("remapDirtySource", classOf[RemapSourceTask]){ t =>
+    makeTask[RemapSourceTask]("remapDirtySource"){ t =>
       t.setInJar(Constants.ZIP_PATCHED)
       t.setOutJar(Constants.ZIP_REMAPPED_DIRTY)
       t.setMethodCsv(Constants.METHODS_CSV)
@@ -161,7 +157,7 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("patchDirtySource")
     }
 
-    makeTask("extractMinecraftResources", classOf[ExtractTask]){ t =>
+    makeTask[ExtractTask]("extractMinecraftResources"){ t =>
       t.exclude(this.javaFiles: _*)
       t.setIncludeEmptyDirs(includeEmptyDirs = false)
       t.from(Constants.REMAPPED_CLEAN)
@@ -169,14 +165,14 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("remapCleanSource" /*, "extractWorkspace"*/)
     }
 
-    makeTask("extractMinecraftSources", classOf[ExtractTask]){ t =>
+    makeTask[ExtractTask]("extractMinecraftSources"){ t =>
       t.include(this.javaFiles: _*)
       t.from(Constants.REMAPPED_CLEAN)
       t.into(Constants.MINECRAFT_CLEAN_SOURCES)
       t.dependsOn("extractMinecraftResources")
     }
 
-    makeTask("extractNailedResources", classOf[ExtractTask]){ t =>
+    makeTask[ExtractTask]("extractNailedResources"){ t =>
       t.exclude(this.javaFiles: _*)
       t.setIncludeEmptyDirs(includeEmptyDirs = false)
       t.from(Constants.ZIP_REMAPPED_DIRTY)
@@ -184,13 +180,13 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("remapDirtySource")
     }
 
-    makeTask("compressDeobfData", classOf[CompressLzmaTask]){ t =>
+    makeTask[CompressLzmaTask]("compressDeobfData"){ t =>
       t.setInput(Constants.NOTCH_2_SRG_SRG)
       t.setOutput(Constants.DEOBF_DATA)
       t.dependsOn("generateMappings")
     }
 
-    makeTask("copyDeobfData", classOf[Copy]){ t =>
+    makeTask[Copy]("copyDeobfData"){ t =>
       t.include("*")
       t.from(Constants.DEOBF_DATA)
       t.from(Constants.RUNTIME_VERSIONFILE)
@@ -199,14 +195,14 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("extractNailedResources", "compressDeobfData", "generateVersionFile")
     }
 
-    makeTask("extractNailedSources", classOf[ExtractTask]){ t =>
+    makeTask[ExtractTask]("extractNailedSources"){ t =>
       t.include(this.javaFiles: _*)
       t.from(Constants.ZIP_REMAPPED_DIRTY)
       t.into(Constants.MINECRAFT_DIRTY_SOURCES)
       t.dependsOn("copyDeobfData")
     }
 
-    makeTask("generateVersionFile", classOf[GenerateVersionFileTask]){ t =>
+    makeTask[GenerateVersionFileTask]("generateVersionFile"){ t =>
       t.setInfoFile(Constants.VERSION_INFO)
       t.setOutput(Constants.RUNTIME_VERSIONFILE)
       t.addConfiguration(mcCfg)
@@ -214,14 +210,14 @@ class McpPlugin extends Plugin[Project] {
       t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
     }
 
-    makeTask("generateRangeMap", classOf[ExtractRangeMapTask]){ t =>
+    makeTask[ExtractRangeMapTask]("generateRangeMap"){ t =>
       t.addConfiguration(mcCfg)
       t.addConfiguration(nailedCfg)
       t.addInput(Constants.MINECRAFT_DIRTY_SOURCES)
       t.setRangeMap(Constants.RANGEMAP)
     }
 
-    makeTask("retroMapSources", classOf[ApplySrg2SourceTask]){ t =>
+    makeTask[ApplySrg2SourceTask]("retroMapSources"){ t =>
       t.addInput(Constants.MINECRAFT_DIRTY_SOURCES)
       t.setOutput(Constants.PATCH_DIRTY)
       t.addSrg(toDelayedFile(Constants.MCP_2_SRG_SRG))
@@ -231,7 +227,7 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("generateMappings", "generateRangeMap")
     }
 
-    makeTask("generatePatches", classOf[GeneratePatchesTask]){ t =>
+    makeTask[GeneratePatchesTask]("generatePatches"){ t =>
       t.setPatchDir(Constants.NAILED_PATCH_DIR)
       t.setOriginal(Constants.ZIP_DECOMP)
       t.setChanged(Constants.PATCH_DIRTY)
@@ -241,7 +237,7 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("retroMapSources")
     }
 
-    makeTask("setupNailed").dependsOn("extractNailedSources", "extractMinecraftSources").setGroup("Nailed-MCP")
+    metaTask("setupNailed").dependsOn("extractNailedSources", "extractMinecraftSources").setGroup("Nailed-MCP")
 
     val ideaConv = project.getExtensions.getByName("idea").asInstanceOf[IdeaModel]
     ideaConv.getModule.getExcludeDirs.addAll(project.files(".gradle", "build", ".idea").getFiles)
@@ -268,6 +264,8 @@ class McpPlugin extends Plugin[Project] {
     val main = javaConv.getSourceSets.getByName("main")
     main.getJava.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_SOURCES))
     main.getResources.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_RESOURCES))
+
+    //project.getDependencies.add("compile", project.getDependencies.module(apiProject))
 
     javaConv.setSourceCompatibility("1.6")
     javaConv.setTargetCompatibility("1.6")
@@ -351,12 +349,18 @@ class McpPlugin extends Plugin[Project] {
     e
   }
 
-  @inline def makeTask(name: String): DefaultTask = makeTask(this.project, name, classOf[DefaultTask]){t => }
-  @inline def makeTask[T <: Task](name: String, cl: Class[T])(configure: (T) => Unit): T = makeTask(this.project, name, cl)(configure)
-  def makeTask[T <: Task](project: Project, name: String, cl: Class[T])(configure: (T) => Unit): T = {
+  def addMavenRepo(project: Project)(configure: (MavenArtifactRepository) => Unit){
+    project.getRepositories.maven(new Action[MavenArtifactRepository] {
+      override def execute(repo: MavenArtifactRepository) = configure(repo)
+    })
+  }
+
+  @inline def metaTask(name: String): DefaultTask = makeTask[DefaultTask](this.project, name){t => }
+  @inline def makeTask[T <: Task](name: String)(configure: (T) => Unit)(implicit mf: Manifest[T]): T = makeTask[T](this.project, name)(configure)(mf)
+  def makeTask[T <: Task](project: Project, name: String)(configure: (T) => Unit)(implicit mf: Manifest[T]): T = {
     val map = new util.HashMap[String, AnyRef]()
     map.put("name", name)
-    map.put("type", cl)
+    map.put("type", mf.runtimeClass)
     val t = project.task(map, name).asInstanceOf[T]
     configure(t)
     t

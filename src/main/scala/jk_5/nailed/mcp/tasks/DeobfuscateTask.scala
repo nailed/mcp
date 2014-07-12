@@ -1,7 +1,6 @@
 package jk_5.nailed.mcp.tasks
 
 import java.io.{BufferedOutputStream, File, FileOutputStream}
-import java.util
 import java.util.zip.{ZipEntry, ZipFile, ZipOutputStream}
 
 import com.google.common.base.Charsets
@@ -210,10 +209,10 @@ class DeobfuscateTask extends CachedTask {
     val cnode = new ClassNode()
     reader.accept(cnode, 0)
     if((cnode.access & Opcodes.ACC_ENUM) == 0 && !cnode.superName.equals("java/lang/Enum") && (cnode.access & Opcodes.ACC_SYNTHETIC) == 0){
-      for(f <- cnode.fields.asInstanceOf[util.List[FieldNode]]){
+      for(f <- cnode.fields.asInstanceOf[java.util.List[FieldNode]]){
         f.access = f.access & (0xffffffff-Opcodes.ACC_SYNTHETIC)
       }
-      for(f <- cnode.methods.asInstanceOf[util.List[MethodNode]]){
+      for(f <- cnode.methods.asInstanceOf[java.util.List[MethodNode]]){
         f.access = f.access & (0xffffffff-Opcodes.ACC_SYNTHETIC)
       }
     }
