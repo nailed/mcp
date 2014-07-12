@@ -263,12 +263,13 @@ class McpPlugin extends Plugin[Project] {
       t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
       //TODO: remap access transformer
       t.from(toDelayedZipFileTree(Constants.BINPATCH_TMP))
-      t.from(project.zipTree(apiProject.getTasks.getByName("jar").property("archivePath")))
-      t.from(toDelayedFileTree(Constants.NAILED_RESOURCES), new CopyFilter(null, "!*_at.cfg")) //Don't copy AccessTransformers. We need to copy them from their remapped location
+      //t.from(project.zipTree(apiProject.getTasks.getByName("jar").property("archivePath")))
+      t.from(toDelayedFileTree(Constants.NAILED_RESOURCES): Any, new CopyFilter(null, "!*_at.cfg"): Closure[_]) //Don't copy AccessTransformers. We need to copy them from their remapped location
+      t.from(toDelayedFileTree(Constants.REMAPPED_ACCESS_TRANSFORMERS))
       t.from(toDelayedFile(Constants.RUNTIME_VERSIONFILE))
       t.from(toDelayedFile(Constants.DEOBF_DATA))
       t.setIncludeEmptyDirs(false)
-      t.dependsOn("generateBinaryPatches", /*"createChangelog",*/ "generateVersionFile", ":api:jar")
+      t.dependsOn("generateBinaryPatches", /*"createChangelog",*/ "generateVersionFile", /*":api:jar",*/ "remapAccessTransformers")
       project.getArtifacts.add("archives", t)
     }
 
@@ -290,6 +291,18 @@ class McpPlugin extends Plugin[Project] {
       t.from(toDelayedFileTree(Constants.NAILED_SCALA_API_SOURCES))
       t.from(toDelayedFileTree(Constants.NAILED_API_RESOURCES))
       project.getArtifacts.add("archives", t)
+    }
+
+    makeTask[RemapAccessTransformersTask]("remapAccessTransformers"){ t =>
+      t.setSrg(Constants.NOTCH_2_SRG_SRG)
+      t.setOutputDir(Constants.REMAPPED_ACCESS_TRANSFORMERS)
+      t.dependsOn("generateMappings")
+
+      for(f <- project.fileTree(toDelayedFile(Constants.NAILED_RESOURCES).call()).getFiles){
+        if(f.getPath.endsWith("_at.cfg")){
+          t.addInput(f)
+        }
+      }
     }
 
     metaTask("setupNailed").dependsOn("extractNailedSources", "extractMinecraftSources").setGroup("Nailed-MCP")
