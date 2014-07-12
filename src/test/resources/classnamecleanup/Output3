@@ -803,11 +803,11 @@ public abstract class MinecraftServer implements ICommandSender, Runnable, IPlay
       } else {
          String[] astring = p_71248_2_.split(" ", -1);
          String s1 = astring[astring.length - 1];
-         String[] astring = this.field_71318_t.func_72369_d();
-         int i = astring.length;
+         String[] astring1 = this.field_71318_t.func_72369_d();
+         int i = astring1.length;
 
          for(int j = 0; j < i; ++j) {
-            String s2 = astring[j];
+            String s2 = astring1[j];
             if(CommandBase.func_71523_a(s1, s2)) {
                arraylist.add(s2);
             }
