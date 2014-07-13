@@ -5,10 +5,11 @@ import _root_.java.util
 
 import com.google.gson.JsonParser
 import groovy.lang.Closure
-import jk_5.nailed.mcp.delayed.{CopyFilter, DelayedFile, DelayedFileTree, DelayedString}
+import jk_5.nailed.mcp.delayed._
 import jk_5.nailed.mcp.tasks._
 import org.gradle.api._
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Jar
@@ -263,13 +264,20 @@ class McpPlugin extends Plugin[Project] {
       t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
       //TODO: remap access transformer
       t.from(toDelayedZipFileTree(Constants.BINPATCH_TMP))
-      //t.from(project.zipTree(apiProject.getTasks.getByName("jar").property("archivePath")))
+      t.from(new Delayed[FileTree](null, project) {
+        override def call() = resolved match {
+          case Some(v) => v
+          case None =>
+            resolved = Some(project.zipTree(apiProject.getTasks.getByName("jar").property("archivePath")))
+            resolved.get
+        }
+      })
       t.from(toDelayedFileTree(Constants.NAILED_RESOURCES): Any, new CopyFilter(null, "!*_at.cfg"): Closure[_]) //Don't copy AccessTransformers. We need to copy them from their remapped location
       t.from(toDelayedFileTree(Constants.REMAPPED_ACCESS_TRANSFORMERS))
       t.from(toDelayedFile(Constants.RUNTIME_VERSIONFILE))
       t.from(toDelayedFile(Constants.DEOBF_DATA))
       t.setIncludeEmptyDirs(false)
-      t.dependsOn("generateBinaryPatches", /*"createChangelog",*/ "generateVersionFile", /*":api:jar",*/ "remapAccessTransformers")
+      t.dependsOn("generateBinaryPatches", /*"createChangelog",*/ "generateVersionFile", ":api:jar", "remapAccessTransformers")
       project.getArtifacts.add("archives", t)
     }
 
