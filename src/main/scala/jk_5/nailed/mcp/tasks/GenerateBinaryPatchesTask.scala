@@ -49,7 +49,7 @@ class GenerateBinaryPatchesTask extends DefaultTask {
     }
 
     val patches = mutable.HashMap[String, Array[Byte]]()
-    createBinPatches(patches, "server/", getCleanJar, getCleanJar)
+    createBinPatches(patches, "server/", getCleanJar, getDirtyJar)
 
     var patchData = createPatchJar(patches)
     patchData = pack200(patchData)
@@ -89,6 +89,9 @@ class GenerateBinaryPatchesTask extends DefaultTask {
   private def createBinPatches(patches: mutable.HashMap[String, Array[Byte]], root: String, base: File, target: File){
     val cleanJ = new JarFile(base)
     val dirtyJ = new JarFile(target)
+
+    getLogger.lifecycle("Clean: " + base.getAbsolutePath)
+    getLogger.lifecycle("Dirty: " + base.getAbsolutePath)
 
     for(entry <- obfMapping){
       val obf = entry._1

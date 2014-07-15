@@ -361,6 +361,10 @@ class McpPlugin extends Plugin[Project] {
     for(dep <- json.getAsJsonArray("dependencies")){
       deps.add(Constants.MINECRAFT_CONFIGURATION, dep.getAsString)
     }
+
+    //Add extra srg
+    val task = project.getTasks.getByName("reobfuscate").asInstanceOf[ReobfuscateTask]
+    task.setExtraSrg(project.getExtensions.getByName(Constants.MCP_EXTENSION_NAME).asInstanceOf[NailedMCPExtension].getExtraSrg)
   }
 
   def injectIdeaRunConfigs(doc: Document, module: String){
