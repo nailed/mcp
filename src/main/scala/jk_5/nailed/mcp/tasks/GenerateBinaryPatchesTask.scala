@@ -90,9 +90,6 @@ class GenerateBinaryPatchesTask extends DefaultTask {
     val cleanJ = new JarFile(base)
     val dirtyJ = new JarFile(target)
 
-    getLogger.lifecycle("Clean: " + base.getAbsolutePath)
-    getLogger.lifecycle("Dirty: " + base.getAbsolutePath)
-
     for(entry <- obfMapping){
       val obf = entry._1
       val srg = entry._2
