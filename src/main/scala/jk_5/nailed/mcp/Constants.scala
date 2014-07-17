@@ -38,7 +38,6 @@ object Constants {
   final val PATCH_DIRTY = "{BUILD_DIR}/tmp/dirty-patch-base.zip"
   final val REOBF_TMP = "{BUILD_DIR}/tmp/recompiledObfuscated.jar"
   final val BINPATCH_TMP = "{BUILD_DIR}/tmp/binpatches.jar"
-  final val REMAPPED_ACCESS_TRANSFORMERS = "{BUILD_DIR}/tmp/accessTransformers"
 
   //Mappings
   final val JOINED_SRG = "{MAPPINGS_DIR}/joined.srg"
