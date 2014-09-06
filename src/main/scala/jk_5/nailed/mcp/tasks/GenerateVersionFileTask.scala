@@ -1,15 +1,17 @@
 package jk_5.nailed.mcp.tasks
 
-import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.{InputFile, TaskAction, OutputFile}
-import jk_5.nailed.mcp.delayed.{DelayedString, DelayedFile}
-import com.google.gson.{JsonPrimitive, JsonArray, JsonParser, JsonObject}
-import java.io.{FileWriter, FileReader}
+import java.io.{FileReader, FileWriter}
+
+import com.google.gson.{JsonArray, JsonObject, JsonParser, JsonPrimitive}
 import jk_5.nailed.mcp.Constants
+import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedString}
 import jk_5.nailed.mcp.json.JsonFactory
-import scala.collection.mutable
-import scala.collection.convert.wrapAsScala._
+import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.tasks.{InputFile, OutputFile, TaskAction}
+
+import scala.collection.convert.wrapAsScala._
+import scala.collection.mutable
 
 /**
  * No description given
@@ -54,6 +56,7 @@ class GenerateVersionFileTask extends DefaultTask {
 
     val repoArray = new JsonArray
     repoArray.add(new JsonPrimitive("http://maven.reening.nl"))
+    repoArray.add(new JsonPrimitive("http://maven.sk89q.com/repo/"))
     repoArray.add(new JsonPrimitive("http://files.minecraftforge.net/maven"))
     repoArray.add(new JsonPrimitive(Constants.MINECRAFT_MAVEN_URL))
     repoArray.add(new JsonPrimitive("http://repo1.maven.org/maven2/"))

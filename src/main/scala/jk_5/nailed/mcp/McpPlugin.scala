@@ -211,11 +211,9 @@ class McpPlugin extends Plugin[Project] {
     }
 
     makeTask[Copy]("copyDeobfData"){ t =>
-      t.include("*")
-      t.from(Constants.DEOBF_DATA)
-      t.from(Constants.RUNTIME_VERSIONFILE)
-      t.into(Constants.MINECRAFT_DIRTY_RESOURCES)
-      t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
+      t.from(toDelayedFile(Constants.DEOBF_DATA))
+      t.from(toDelayedFile(Constants.RUNTIME_VERSIONFILE))
+      t.into(toDelayedFile(Constants.MINECRAFT_DIRTY_RESOURCES))
       t.dependsOn("extractNailedResources", "compressDeobfData", "generateVersionFile")
     }
 
