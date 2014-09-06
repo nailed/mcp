@@ -1,6 +1,6 @@
 package jk_5.nailed.mcp
 
-import _root_.java.io.FileReader
+import _root_.java.io.{FileReader, PrintWriter}
 import _root_.java.util
 
 import com.google.gson.JsonParser
@@ -80,6 +80,22 @@ class McpPlugin extends Plugin[Project] {
       t.dependsOn("downloadServer")
     }
 
+    makeTask[DownloadMappingsTask]("downloadMappings"){ t =>
+      t.setFieldCsv(Constants.FIELDS_CSV)
+      t.setMethodCsv(Constants.METHODS_CSV)
+      //t.setParamCsv(Constants.PARAMS_CSV)
+
+      t.doLast(new Action[Task] {
+        override def execute(t: Task){
+          val f = toDelayedFile(Constants.PARAMS_CSV).call()
+          val w = new PrintWriter(f)
+          w.println("param,name,side")
+          w.flush()
+          w.close()
+        }
+      })
+    }
+
     makeTask[GenerateMappingsTask]("generateMappings"){ t =>
       t.setInSrg(Constants.JOINED_SRG)
       t.setInExc(Constants.JOINED_EXC)
@@ -95,11 +111,15 @@ class McpPlugin extends Plugin[Project] {
 
       for(f <- project.fileTree(toDelayedFile(Constants.NAILED_RESOURCES).call()).getFiles){
         if(f.getPath.endsWith(".exc")){
+          project.getLogger.lifecycle("  Added extra exc file " + f.getName)
           t.addExtraExc(f)
         }else if(f.getPath.endsWith(".srg")){
+          project.getLogger.lifecycle("  Added extra srg file " + f.getName)
           t.addExtraSrg(f)
         }
       }
+
+      t.mustRunAfter("downloadMappings")
     }
 
     makeTask[DeobfuscateTask]("deobfuscate"){ t =>
@@ -115,6 +135,7 @@ class McpPlugin extends Plugin[Project] {
 
       for(f <- project.fileTree(toDelayedFile(Constants.NAILED_RESOURCES).call()).getFiles){
         if(f.getPath.endsWith("_at.cfg")){
+          project.getLogger.lifecycle("  Added AccessTransformer file " + f.getName)
           t.addAccessTransformer(f)
         }
       }
@@ -295,7 +316,7 @@ class McpPlugin extends Plugin[Project] {
       project.getArtifacts.add("archives", t)
     }
 
-    metaTask("setupNailed").dependsOn("extractNailedSources", "extractMinecraftSources").setGroup("Nailed-MCP")
+    metaTask("setupNailed").dependsOn("downloadMappings", "extractNailedSources", "extractMinecraftSources").setGroup("Nailed-MCP")
     metaTask("buildPackages").dependsOn("packageServer", "packageScaladoc", "packageSource").setGroup("Nailed-MCP")
 
     project.getTasks.getByName("uploadArchives").dependsOn("buildPackages")

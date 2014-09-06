@@ -19,6 +19,10 @@ object Constants {
 
   final val SERVER_JAR_VANILLA = "{CACHE_DIR}/nailed-mcp/net/minecraft/minecraft_server/{MC_VERSION}/minecraft_server-{MC_VERSION}.jar"
   final val MC_SERVER_URL = "http://s3.amazonaws.com/Minecraft.Download/versions/{MC_VERSION}/minecraft_server.{MC_VERSION}.jar"
+  final val MAPPINGS_URL_BASE = "http://mcpbot.bspk.rs/testcsv/"
+  final val MAPPINGS_URL_METHODS = MAPPINGS_URL_BASE + "methods.csv"
+  final val MAPPINGS_URL_FIELDS = MAPPINGS_URL_BASE + "fields.csv"
+  final val MAPPINGS_URL_PARAMS = MAPPINGS_URL_BASE + "params.csv"
 
   final val FERNFLOWER_CONFIGURATION = "fernFlower"
   final val MINECRAFT_CONFIGURATION = "minecraft"
@@ -42,9 +46,6 @@ object Constants {
   //Mappings
   final val JOINED_SRG = "{MAPPINGS_DIR}/joined.srg"
   final val JOINED_EXC = "{MAPPINGS_DIR}/joined.exc"
-  final val METHODS_CSV = "{MAPPINGS_DIR}/methods.csv"
-  final val FIELDS_CSV = "{MAPPINGS_DIR}/fields.csv"
-  final val PARAMS_CSV = "{MAPPINGS_DIR}/params.csv"
   final val PACKAGES_CSV = "{MAPPINGS_DIR}/packages.csv"
   final val EXC_JSON = "{MAPPINGS_DIR}/exceptor.json"
   final val MCP_PATCHES = "{MAPPINGS_DIR}/patches"
@@ -59,6 +60,9 @@ object Constants {
   final val MCP_2_NOTCH_SRG = "{BUILD_DIR}/tmp/mappings/mcp2notch.srg"
   final val SRG_EXC = "{BUILD_DIR}/tmp/mappings/srg.exc"
   final val MCP_EXC = "{BUILD_DIR}/tmp/mappings/mcp.exc"
+  final val METHODS_CSV = "{BUILD_DIR}/tmp/mappings/methods.csv"
+  final val FIELDS_CSV = "{BUILD_DIR}/tmp/mappings/fields.csv"
+  final val PARAMS_CSV = "{BUILD_DIR}/tmp/mappings/params.csv"
 
   final val NAILED_JAVA_SOURCES = "{PROJECT_DIR}/src/main/java"
   final val NAILED_SCALA_SOURCES = "{PROJECT_DIR}/src/main/scala"
