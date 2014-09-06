@@ -11,9 +11,19 @@ import org.gradle.api.Project
 abstract class Delayed[T](val pattern: String, val owner: Project) extends Closure[T](owner) {
 
   protected var resolved: Option[T] = None
+  private var isResolved = false
 
   def get = resolved
 
-  override def call(): T
+  def resolve(): T
+
+  override final def call(): T = {
+    if(!isResolved){
+      resolved = Option(resolve())
+      isResolved = resolved.isDefined
+    }
+    resolved.get
+  }
+
   override def toString = call().toString
 }

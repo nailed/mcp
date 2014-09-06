@@ -13,6 +13,7 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Jar
+import org.gradle.api.tasks.scala.ScalaCompile
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.w3c.dom.{Document, Element}
 
@@ -45,10 +46,10 @@ class McpPlugin extends Plugin[Project] {
           r.setUrl(Constants.MINECRAFT_MAVEN_URL)
         }
         project.getRepositories.mavenCentral
-        addMavenRepo(project){ r =>
+        /*addMavenRepo(project){ r =>
           r.setName("reening")
           r.setUrl("http://maven.reening.nl")
-        }
+        }*/
         addMavenRepo(project){ r =>
           r.setName("forge")
           r.setUrl("http://files.minecraftforge.net/maven")
@@ -264,12 +265,7 @@ class McpPlugin extends Plugin[Project] {
       t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
       t.from(toDelayedZipFileTree(Constants.BINPATCH_TMP))
       t.from(new Delayed[FileTree](null, project) {
-        override def call() = resolved match {
-          case Some(v) => v
-          case None =>
-            resolved = Some(project.zipTree(apiProject.getTasks.getByName("jar").property("archivePath")))
-            resolved.get
-        }
+        override def resolve(): FileTree = project.zipTree(apiProject.getTasks.getByName("jar").property("archivePath"))
       })
       t.from(toDelayedFileTree(Constants.NAILED_RESOURCES))
       t.from(toDelayedFile(Constants.RUNTIME_VERSIONFILE))
@@ -336,6 +332,12 @@ class McpPlugin extends Plugin[Project] {
 
     javaConv.setSourceCompatibility("1.6")
     javaConv.setTargetCompatibility("1.6")
+
+    project.getTasks.withType(classOf[ScalaCompile], new Action[ScalaCompile] {
+      override def execute(opt: ScalaCompile){
+        opt.getOptions.setUseAnt(false)
+      }
+    })
   }
 
   def afterEvaluate(project: Project){
