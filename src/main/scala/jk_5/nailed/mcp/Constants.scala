@@ -46,7 +46,6 @@ object Constants {
   //Mappings
   final val JOINED_SRG = "{MAPPINGS_DIR}/joined.srg"
   final val JOINED_EXC = "{MAPPINGS_DIR}/joined.exc"
-  final val PACKAGES_CSV = "{MAPPINGS_DIR}/packages.csv"
   final val EXC_JSON = "{MAPPINGS_DIR}/exceptor.json"
   final val MCP_PATCHES = "{MAPPINGS_DIR}/patches"
   final val SHADEDLIB_REMOVE_CONFIG = "{MAPPINGS_DIR}/removeClasses.cfg"

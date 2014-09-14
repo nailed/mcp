@@ -55,9 +55,9 @@ class GenerateVersionFileTask extends DefaultTask {
     json.add("dependencies", deps)
 
     val repoArray = new JsonArray
-    repoArray.add(new JsonPrimitive("http://maven.reening.nl"))
+    repoArray.add(new JsonPrimitive("http://maven.jk-5.tk/"))
     repoArray.add(new JsonPrimitive("http://maven.sk89q.com/repo/"))
-    repoArray.add(new JsonPrimitive("http://files.minecraftforge.net/maven"))
+    repoArray.add(new JsonPrimitive("http://files.minecraftforge.net/maven/"))
     repoArray.add(new JsonPrimitive(Constants.MINECRAFT_MAVEN_URL))
     repoArray.add(new JsonPrimitive("http://repo1.maven.org/maven2/"))
 

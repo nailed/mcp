@@ -103,7 +103,7 @@ class DeobfuscateTask extends CachedTask {
       }
     }
 
-    getLogger.info("Applying AccessTransformers", new Array[AnyRef](0): _*)
+    getLogger.lifecycle("Applying AccessTransformers", new Array[AnyRef](0): _*)
     for(at <- ats){
       getLogger.info("  {}", Array(at): _*)
       accessMap.loadAccessTransformer(at)

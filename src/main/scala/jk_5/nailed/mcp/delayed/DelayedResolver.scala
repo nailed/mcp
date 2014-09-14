@@ -1,8 +1,7 @@
 package jk_5.nailed.mcp.delayed
 
+import jk_5.nailed.mcp.{Constants, NailedMCPExtension}
 import org.gradle.api.Project
-import jk_5.nailed.mcp.{NailedMCPExtension, Constants}
-import java.io.File
 
 /**
  * No description given
@@ -20,7 +19,7 @@ object DelayedResolver {
     val ext = project.getExtensions.getByName(Constants.MCP_EXTENSION_NAME).asInstanceOf[NailedMCPExtension]
 
     p = p.replace("{CACHE_DIR}", project.getGradle.getGradleUserHomeDir.getAbsolutePath.replace('\\', '/') + "/caches")
-    p = p.replace("{MAPPINGS_DIR}", project.getRootDir.getAbsolutePath.replace('\\', '/') + "/config/{MC_VERSION}")
+    p = p.replace("{MAPPINGS_DIR}", "{PROJECT_DIR}/config")
     p = p.replace("{BUILD_DIR}", project.getBuildDir.getAbsolutePath.replace('\\', '/'))
     p = p.replace("{PROJECT_DIR}", project.getRootDir.getAbsolutePath.replace('\\', '/'))
     if(ext.getMinecraftVersion != null){

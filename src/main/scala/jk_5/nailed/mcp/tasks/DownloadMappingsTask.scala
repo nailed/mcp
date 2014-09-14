@@ -2,14 +2,13 @@ package jk_5.nailed.mcp.tasks
 
 import java.io._
 import java.net.{HttpURLConnection, URL}
-import java.util.{Calendar, Date}
+import java.util.Date
 
 import com.google.common.io.ByteStreams
 import jk_5.nailed.mcp.Constants
 import jk_5.nailed.mcp.delayed.DelayedFile
-import org.gradle.api.specs.Spec
+import org.gradle.api.DefaultTask
 import org.gradle.api.tasks.{OutputFile, TaskAction}
-import org.gradle.api.{DefaultTask, Task}
 
 /**
  * No description given
@@ -18,14 +17,14 @@ import org.gradle.api.{DefaultTask, Task}
  */
 class DownloadMappingsTask extends DefaultTask {
 
-  this.onlyIf(new Spec[Task] {
+  /*this.onlyIf(new Spec[Task] {
     override def isSatisfiedBy(t: Task): Boolean = {
       val cal = Calendar.getInstance
       cal.setTime(getLastDownloadTime)
       cal.add(Calendar.MINUTE, 30)
       cal.before(new Date) || System.getProperty("forceDownload", "false").equalsIgnoreCase("true")
     }
-  })
+  })*/
 
   final val cacheFile = new File(this.getTemporaryDir, "lastdownload.txt")
 
