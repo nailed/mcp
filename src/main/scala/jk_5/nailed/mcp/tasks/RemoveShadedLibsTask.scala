@@ -3,7 +3,7 @@ package jk_5.nailed.mcp.tasks
 import java.io.{BufferedOutputStream, FileOutputStream}
 import java.util.zip.{ZipEntry, ZipFile, ZipOutputStream}
 
-import com.google.common.base.Charsets
+import com.google.common.base.{Charsets, Strings}
 import com.google.common.io.{ByteStreams, Files}
 import jk_5.nailed.mcp.delayed.DelayedFile
 import jk_5.nailed.mcp.tasks.CachedTask.Cached
@@ -28,7 +28,11 @@ class RemoveShadedLibsTask extends CachedTask {
   @TaskAction def doTask(){
     try{
       for(l <- Files.readLines(this.config.call(), Charsets.UTF_8)){
-        remove.add(l.split("#")(0).trim)
+        val line = l.split("#")(0).trim
+        if(!Strings.isNullOrEmpty(line)){
+          remove += line
+          getLogger.info("Remove: {}", line)
+        }
       }
     }catch{
       case e: Exception =>
@@ -44,7 +48,9 @@ class RemoveShadedLibsTask extends CachedTask {
 
       for(e <- inFile.entries()){
         val name = e.getName
+        getLogger.debug("Trying {}", name)
         if(name.startsWith(".") || !this.remove.exists(n => name.startsWith(n) || name.equals(n))){
+          getLogger.debug("  Adding {}", name)
           val newEntry = new ZipEntry(name)
           outStream.putNextEntry(newEntry)
           outStream.write(ByteStreams.toByteArray(inFile.getInputStream(e)))

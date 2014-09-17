@@ -13,7 +13,6 @@ class NailedMCPExtension(val project: Project) {
 
   private var minecraftVersion: String = _
   private var mainClass: String = _
-  private var disableParams: Boolean = false
   private val extraSrg = mutable.ArrayBuffer[String]()
 
   def setMinecraftVersion(minecraftVersion: String) = this.minecraftVersion = minecraftVersion
@@ -22,6 +21,4 @@ class NailedMCPExtension(val project: Project) {
   def getMainClass = this.mainClass
   def addSrg(srg: String): Unit = this.extraSrg += srg
   def getExtraSrg = this.extraSrg
-  def setDisableParams(disable: Boolean) = this.disableParams = disable
-  def getDisableParams = this.disableParams
 }

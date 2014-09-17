@@ -11,6 +11,7 @@ import org.gradle.api._
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.JavaPluginConvention
+import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.scala.ScalaCompile
 import org.gradle.plugins.ide.idea.model.IdeaModel
@@ -226,6 +227,8 @@ class McpPlugin extends Plugin[Project] {
       t.addConfiguration(nailedCfg)
       t.addInput(Constants.MINECRAFT_DIRTY_SOURCES)
       t.setRangeMap(Constants.RANGEMAP)
+      t.setExcOut(Constants.EXC_DIRTY)
+      t.setCleanCompiled(Constants.JAR_SRG)
     }
 
     makeTask[ApplySrg2SourceTask]("retroMapSources"){ t =>
@@ -235,6 +238,7 @@ class McpPlugin extends Plugin[Project] {
       t.addExc(toDelayedFile(Constants.MCP_EXC))
       t.addExc(toDelayedFile(Constants.SRG_EXC))
       t.setRangeMap(Constants.RANGEMAP)
+      t.setExcModifiers(Constants.EXC_DIRTY)
       t.dependsOn("generateMappings", "generateRangeMap")
     }
 

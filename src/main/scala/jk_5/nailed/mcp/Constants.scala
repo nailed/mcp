@@ -62,6 +62,7 @@ object Constants {
   final val METHODS_CSV = "{BUILD_DIR}/tmp/mappings/methods.csv"
   final val FIELDS_CSV = "{BUILD_DIR}/tmp/mappings/fields.csv"
   final val PARAMS_CSV = "{BUILD_DIR}/tmp/mappings/params.csv"
+  final val EXC_DIRTY = "{BUILD_DIR}/tmp/mappings/statics.txt"
 
   final val NAILED_JAVA_SOURCES = "{PROJECT_DIR}/src/main/java"
   final val NAILED_SCALA_SOURCES = "{PROJECT_DIR}/src/main/scala"

@@ -46,7 +46,7 @@ class DeobfuscateTask extends CachedTask {
 
   @TaskAction def doTask(){
     val tempObfJar = new File(getTemporaryDir, "postDeobf.jar")
-    val tempExcJar = if(stripSynthetics) new File(getTemporaryDir, "postExceptor.jar")  else getOutJar
+    val tempExcJar = if(stripSynthetics) new File(getTemporaryDir, "postExceptor.jar") else getOutJar
     val ats = mutable.HashSet[File]()
     this.accessTransformers.foreach(t => ats.add(getProject.file(t).getCanonicalFile))
 

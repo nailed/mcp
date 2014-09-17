@@ -1,9 +1,10 @@
 package jk_5.nailed.mcp.tasks
 
-import java.io.File
+import java.io._
+import java.util.zip.ZipInputStream
 
 import com.google.code.regexp.{Matcher, Pattern}
-import com.google.common.base.Charsets
+import com.google.common.base.{Charsets, Throwables}
 import com.google.common.io.{ByteStreams, Files}
 import jk_5.nailed.mcp.delayed.DelayedFile
 import jk_5.nailed.mcp.io.{CachedInputSupplier, SequencedInputSupplier}
@@ -13,11 +14,12 @@ import net.minecraftforge.srg2source.util.io.{FolderSupplier, InputSupplier, Zip
 import org.gradle.api.DefaultTask
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.{InputFiles, OutputFile, TaskAction}
+import org.gradle.api.tasks._
+import org.objectweb.asm.{ClassReader, ClassVisitor, MethodVisitor, Opcodes}
 
-import scala.collection.JavaConverters._
-import scala.collection.convert.wrapAsScala._
-import scala.collection.mutable
+import _root_.scala.collection.JavaConverters._
+import _root_.scala.collection.convert.wrapAsScala._
+import _root_.scala.collection.mutable
 
 /**
  * No description given
@@ -31,6 +33,8 @@ class ExtractRangeMapTask extends DefaultTask {
   private val inputs = mutable.ArrayBuffer[DelayedFile]()
   private val configurations = mutable.ArrayBuffer[Configuration]()
   private var allCached = false
+  @Optional @OutputFile private var excOut: DelayedFile = _
+  @Optional @InputFile private var cleanCompiled: DelayedFile = _
 
   private final val FILE_FROM = Pattern.compile("\\s+@\\|([\\w\\d/.]+)\\|.*$")
   private final val FILE_START = Pattern.compile("\\s*Class Start\\: ([\\w\\d.]+)$")
@@ -38,6 +42,10 @@ class ExtractRangeMapTask extends DefaultTask {
   @TaskAction def doTask(){
     val inputs = getInputFiles
     val rangemap = this.getRangeMap
+
+    if(getCleanCompiled != null){
+      extractExcInfo(getCleanCompiled, getExcOut)
+    }
 
     if(inputs.size == 0) return
     val supplier = cache(if(inputs.size == 1) getInputSupplier(inputs(0)) else {
@@ -148,6 +156,10 @@ class ExtractRangeMapTask extends DefaultTask {
   def getRangeMap = this.rangeMap.call()
   def addConfiguration(configuration: Configuration) = this.configurations += configuration
   def addInput(input: DelayedFile) = this.inputs += input
+  def setExcOut(excOut: DelayedFile) = this.excOut = excOut
+  def getExcOut = this.excOut.call()
+  def setCleanCompiled(cleanCompiled: DelayedFile) = this.cleanCompiled = cleanCompiled
+  def getCleanCompiled = if(this.cleanCompiled == null) null else this.cleanCompiled.call()
 
   def getLibs: FileCollection = {
     if(libs == null){
@@ -158,6 +170,48 @@ class ExtractRangeMapTask extends DefaultTask {
       libs = getProject.files(getProject.getConfigurations.getByName("compile"))
     }
     libs
+  }
+
+  private def extractExcInfo(compiled: File, output: File){
+    try{
+      if(output.exists()){
+        output.delete()
+      }
+
+      output.getParentFile.mkdirs()
+      output.createNewFile()
+
+      val writer = Files.newWriter(output, Charsets.UTF_8)
+      var inJar: ZipInputStream = null
+      try{
+        inJar = new ZipInputStream(new BufferedInputStream(new FileInputStream(compiled)))
+
+        var stop = false
+        while(!stop){
+          val entry = inJar.getNextEntry
+          if(entry == null) stop = true
+          if(!stop && !entry.isDirectory && entry.getName.endsWith(".class") && entry.getName.startsWith("net/minecraft/")){
+            getLogger.debug("Processing {}", entry.getName)
+            val data = new Array[Byte](4096)
+            val entryBuffer = new ByteArrayOutputStream()
+            var len: Int = -1
+            do{
+              len = inJar.read(data)
+              if(len > 0) entryBuffer.write(data, 0, len)
+            }while(len != -1)
+            val entryData = entryBuffer.toByteArray
+            new ClassReader(entryData).accept(new GenerateMapAdapter(writer), 0)
+          }
+        }
+      }finally{
+        if(inJar != null){
+          inJar.close()
+        }
+      }
+      writer.close();
+    }catch{
+      case e: IOException => Throwables.propagate(e)
+    }
   }
 
   class CacheEntry(p: String, r: File, val hash: String) {
@@ -190,5 +244,30 @@ class ExtractRangeMapTask extends DefaultTask {
     }
 
     override def toString = this.path + ";" + this.root.toString + ";" + this.hash
+  }
+
+  //TODO: run the produced jar through this adapter so it collects static info
+  class GenerateMapAdapter(val writer: BufferedWriter) extends ClassVisitor(Opcodes.ASM4) {
+    var className: String = _
+
+    override def visit(version: Int, access: Int, name: String, signature: String, supername: String, interfaces: Array[String]){
+      this.className = name
+      super.visit(version, access, name, signature, supername, interfaces)
+    }
+
+    override def visitMethod(access: Int, name: String, desc: String, signature: String, exceptions: Array[String]): MethodVisitor = {
+      if(name == "<clinit>") return super.visitMethod(access, name, desc, signature, exceptions)
+      val clsSig = this.className + "/" + name + desc
+
+      try{
+        if((access & Opcodes.ACC_STATIC) == Opcodes.ACC_STATIC){
+          writer.write(clsSig)
+          writer.newLine()
+        }
+      }catch{
+        case e: IOException => Throwables.propagate(e)
+      }
+      super.visitMethod(access, name, desc, signature, exceptions)
+    }
   }
 }
