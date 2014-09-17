@@ -91,11 +91,11 @@ object FernFlowerPatcher {
 
   def processEnum(lines: util.List[String], indent: String, startIndex: Int, qualifiedName: String, simpleName: String){
     val newIndent = indent + "   "
-    val enumEntry = Pattern.compile(newIndent + ENUM_ENTRY_REGEX)
-    val constructor = Pattern.compile(newIndent + String.format(CONSTRUCTOR_REGEX, simpleName))
-    val constructorCall = Pattern.compile(newIndent + "   " + CONSTRUCTOR_CALL_REGEX)
+    val enumEntry = Pattern.compile("^" + newIndent + ENUM_ENTRY_REGEX)
+    val constructor = Pattern.compile("^" + newIndent + String.format(CONSTRUCTOR_REGEX, simpleName))
+    val constructorCall = Pattern.compile("^" + newIndent + "   " + CONSTRUCTOR_CALL_REGEX)
     val formatted = newIndent + String.format(VALUE_FIELD_REGEX, qualifiedName, qualifiedName)
-    val valueField = Pattern.compile(formatted)
+    val valueField = Pattern.compile("^" + formatted)
     var newLine: String = null
     var prevSynthetic = false
 
