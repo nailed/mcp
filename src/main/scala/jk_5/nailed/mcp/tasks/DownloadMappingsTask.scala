@@ -5,10 +5,10 @@ import java.net.{HttpURLConnection, URL}
 import java.util.Date
 
 import com.google.common.io.ByteStreams
-import jk_5.nailed.mcp.Constants
-import jk_5.nailed.mcp.delayed.DelayedFile
+import jk_5.nailed.mcp.delayed.{DelayedFile, DelayedResolver}
+import jk_5.nailed.mcp.{Constants, NailedMCPExtension}
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.{OutputFile, TaskAction}
+import org.gradle.api.tasks.{Input, OutputFile, TaskAction}
 
 /**
  * No description given
@@ -30,15 +30,27 @@ class DownloadMappingsTask extends DefaultTask {
 
   @OutputFile private var methodCsv: DelayedFile = null
   @OutputFile private var fieldCsv: DelayedFile = null
-  private var paramCsv: DelayedFile = null
+  @OutputFile private var paramCsv: DelayedFile = null
 
   @TaskAction
   def doTask(){
     if(methodCsv != null) download(Constants.MAPPINGS_URL_METHODS, methodCsv.call())
     if(fieldCsv != null) download(Constants.MAPPINGS_URL_FIELDS, fieldCsv.call())
-    if(paramCsv != null) download(Constants.MAPPINGS_URL_PARAMS, paramCsv.call())
+    if(paramCsv != null){
+      if(isParamsDisabled){
+        val f = new File(DelayedResolver.resolve(Constants.PARAMS_CSV, getProject))
+        val w = new PrintWriter(f)
+        w.println("param,name,side")
+        w.flush()
+        w.close()
+      }else{
+        download(Constants.MAPPINGS_URL_PARAMS, paramCsv.call())
+      }
+    }
     updateLastDownloadTime()
   }
+
+  @Input def isParamsDisabled = this.getProject.getExtensions.getByType(classOf[NailedMCPExtension]).getDisableParams
 
   def download(url: String, dest: File){
     var connection: HttpURLConnection = null

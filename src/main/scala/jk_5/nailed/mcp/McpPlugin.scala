@@ -1,6 +1,6 @@
 package jk_5.nailed.mcp
 
-import _root_.java.io.{FileReader, PrintWriter}
+import _root_.java.io.FileReader
 import _root_.java.util
 
 import com.google.gson.JsonParser
@@ -11,7 +11,6 @@ import org.gradle.api._
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.JavaPluginConvention
-import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.scala.ScalaCompile
 import org.gradle.plugins.ide.idea.model.IdeaModel
@@ -83,17 +82,7 @@ class McpPlugin extends Plugin[Project] {
     makeTask[DownloadMappingsTask]("downloadMappings"){ t =>
       t.setFieldCsv(Constants.FIELDS_CSV)
       t.setMethodCsv(Constants.METHODS_CSV)
-      //t.setParamCsv(Constants.PARAMS_CSV)
-
-      t.doLast(new Action[Task] {
-        override def execute(t: Task){
-          val f = toDelayedFile(Constants.PARAMS_CSV).call()
-          val w = new PrintWriter(f)
-          w.println("param,name,side")
-          w.flush()
-          w.close()
-        }
-      })
+      t.setParamCsv(Constants.PARAMS_CSV)
     }
 
     makeTask[GenerateMappingsTask]("generateMappings"){ t =>
@@ -111,10 +100,10 @@ class McpPlugin extends Plugin[Project] {
 
       for(f <- project.fileTree(toDelayedFile(Constants.NAILED_RESOURCES).call()).getFiles){
         if(f.getPath.endsWith(".exc")){
-          project.getLogger.lifecycle("  Added extra exc file " + f.getName)
+          project.getLogger.lifecycle("Added extra exc file " + f.getName)
           t.addExtraExc(f)
         }else if(f.getPath.endsWith(".srg")){
-          project.getLogger.lifecycle("  Added extra srg file " + f.getName)
+          project.getLogger.lifecycle("Added extra srg file " + f.getName)
           t.addExtraSrg(f)
         }
       }
@@ -135,7 +124,7 @@ class McpPlugin extends Plugin[Project] {
 
       for(f <- project.fileTree(toDelayedFile(Constants.NAILED_RESOURCES).call()).getFiles){
         if(f.getPath.endsWith("_at.cfg")){
-          project.getLogger.lifecycle("  Added AccessTransformer file " + f.getName)
+          project.getLogger.lifecycle("Added AccessTransformer file " + f.getName)
           t.addAccessTransformer(f)
         }
       }
