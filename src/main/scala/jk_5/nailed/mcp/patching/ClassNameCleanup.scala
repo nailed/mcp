@@ -168,7 +168,8 @@ class ClassNameCleanup(val parent: ClassNameCleanup = null) {
         "Byte" -> new Holder(0, true, "obyte"),
         "Short" -> new Holder(0, true, "oshort"),
         "Boolean" -> new Holder(0, true, "obool"),
-        "Package" -> new Holder(0, true, "opackage")
+        "Package" -> new Holder(0, true, "opackage"),
+        "Enum" -> new Holder(0, true, "oenum")
       )
     }else{
       val ret = mutable.HashMap[String, Holder]()
