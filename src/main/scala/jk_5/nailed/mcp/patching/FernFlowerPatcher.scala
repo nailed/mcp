@@ -17,7 +17,7 @@ object FernFlowerPatcher {
 
   final val MODIFIERS = "public|protected|private|static|abstract|final|native|synchronized|transient|volatile|strictfp"
   final val SYNTHETICS = Pattern.compile("(?m)(\\s*// \\$FF: (synthetic|bridge) method(\\r\\n|\\n|\\r)){1,2}\\s*(?<modifiers>(?:(?:" + MODIFIERS + ") )*)(?<return>.+?) (?<method>.+?)\\((?<arguments>.*)\\)\\s*\\{(\\r\\n|\\n|\\r)\\s*return this\\.(?<method2>.+?)\\((?<arguments2>.*)\\);(\\r\\n|\\n|\\r)\\s*\\}")
-  final val ABSTRACT = Pattern.compile("(?m)^(?<indent>[ \\t\\f\\v]*)(?<modifiers>(?:(?:" + MODIFIERS + ") )*)(?<return>[^ ]+) (?<method>func_(?<number>\\d+)_[a-zA-Z_]+)\\((?<arguments>([^ ,]+ var\\d+,? ?)*)\\)(?: throws (?:[\\w$.]+,? ?)+)?;$")
+  final val ABSTRACT = Pattern.compile("(?m)^(?<indent>[ \\t\\f\\v]*)(?<modifiers>(?:(?:" + MODIFIERS + ") )*)(?<return>[^ ]+) (?<method>func_(?<number>\\d+)_[a-zA-Z_]+)\\((?<arguments>([^ ,]+ (\\.\\.\\. )?var\\d+,? ?)*)\\)(?: throws (?:[\\w$.]+,? ?)+)?;$")
   final val TRAILING_WHITESPACE = "(?m)[ \\t]+$"
   final val REPEATED_NEWLINES = "(?m)^(\\r\\n|\\r|\\n){2,}"
   final val EMPTY_SUPER = "(?m)^[ \t]+super\\(\\);(\\r\\n|\\n|\\r)"
@@ -215,6 +215,10 @@ object FernFlowerPatcher {
     val fixed = new StringBuilder
     for(i <- 0 until args.length){
       val p = args(i).split(" ")
+      if(p.length == 3){ //Varargs
+        p(0) = p(0) + " " + p(1)
+        p(1) = p(2)
+      }
       fixed.append(p(0))
       fixed.append(" p_")
       fixed.append(number)

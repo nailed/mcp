@@ -23,6 +23,8 @@ public class TestClass {
       return TestClass.InnerEnum.func_150978_a(p_150896_1_) == TestClass.InnerEnum.PUFFERFISH?PotionHelper.field_151423_m:null;
    }
 
+   public String func_150896_i(ItemStack ... var1);
+
    public static enum InnerEnum {
 
       COD("COD", 0, 0, "cod", 2, 0.1F, 5, 0.6F),
