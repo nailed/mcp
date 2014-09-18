@@ -29,7 +29,7 @@ class ApplySrg2SourceTask extends DefaultTask {
   @InputFile private var rangeMap: DelayedFile = _
   private val in = Lists.newLinkedList[DelayedFile]()
   private var out: DelayedFile = _
-  @Optional @InputFiles private var excModifiers: DelayedFile = _
+  @Optional @InputFiles private var staticsList: DelayedFile = _
 
   @TaskAction def doTask(){
     val ins = getIn
@@ -50,8 +50,8 @@ class ApplySrg2SourceTask extends DefaultTask {
       inputSupplier.asInstanceOf[OutputSupplier]
     }else getOutputSupplier(out)
 
-    if(getExcModifiers != null){
-      exc = generateDefaultExc(getExcModifiers, exc, srg)
+    if(getStaticsList != null){
+      exc = generateDefaultExc(getStaticsList, exc, srg)
     }
 
     applyRangeMap(inputSupplier, outputSupplier, srg, exc, rangemap, rangelog)
@@ -190,7 +190,7 @@ class ApplySrg2SourceTask extends DefaultTask {
   def addSrg(srg: String) = this.srg.add(srg)
   def addSrg(srg: DelayedFile) = this.srg.add(srg)
   def addInput(in: DelayedFile) = this.in.add(in)
-  def setExcModifiers(exc: DelayedFile) = this.excModifiers = exc
+  def setStaticsList(exc: DelayedFile) = this.staticsList = exc
 
   def setRangeMap(rangeMap: DelayedFile) = this.rangeMap = rangeMap
   def setOutput(output: DelayedFile) = this.out = output
@@ -200,5 +200,5 @@ class ApplySrg2SourceTask extends DefaultTask {
   def getSrgs = getProject.files(srg)
   def getOut = this.out.call()
   @InputFiles def getIns = getProject.files(in)
-  def getExcModifiers = this.excModifiers.call()
+  def getStaticsList = this.staticsList.call()
 }

@@ -33,7 +33,7 @@ class ExtractRangeMapTask extends DefaultTask {
   private val inputs = mutable.ArrayBuffer[DelayedFile]()
   private val configurations = mutable.ArrayBuffer[Configuration]()
   private var allCached = false
-  @Optional @OutputFile private var excOut: DelayedFile = _
+  @Optional @OutputFile private var staticsList: DelayedFile = _
   @Optional @InputFile private var cleanCompiled: DelayedFile = _
 
   private final val FILE_FROM = Pattern.compile("\\s+@\\|([\\w\\d/.]+)\\|.*$")
@@ -44,7 +44,7 @@ class ExtractRangeMapTask extends DefaultTask {
     val rangemap = this.getRangeMap
 
     if(getCleanCompiled != null){
-      extractExcInfo(getCleanCompiled, getExcOut)
+      extractStaticInfo(getCleanCompiled, getStaticsList)
     }
 
     if(inputs.size == 0) return
@@ -156,8 +156,8 @@ class ExtractRangeMapTask extends DefaultTask {
   def getRangeMap = this.rangeMap.call()
   def addConfiguration(configuration: Configuration) = this.configurations += configuration
   def addInput(input: DelayedFile) = this.inputs += input
-  def setExcOut(excOut: DelayedFile) = this.excOut = excOut
-  def getExcOut = this.excOut.call()
+  def setStaticsList(excOut: DelayedFile) = this.staticsList = excOut
+  def getStaticsList = this.staticsList.call()
   def setCleanCompiled(cleanCompiled: DelayedFile) = this.cleanCompiled = cleanCompiled
   def getCleanCompiled = if(this.cleanCompiled == null) null else this.cleanCompiled.call()
 
@@ -172,7 +172,7 @@ class ExtractRangeMapTask extends DefaultTask {
     libs
   }
 
-  private def extractExcInfo(compiled: File, output: File){
+  private def extractStaticInfo(compiled: File, output: File){
     try{
       if(output.exists()){
         output.delete()

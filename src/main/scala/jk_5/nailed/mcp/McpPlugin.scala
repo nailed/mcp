@@ -227,8 +227,9 @@ class McpPlugin extends Plugin[Project] {
       t.addConfiguration(nailedCfg)
       t.addInput(Constants.MINECRAFT_DIRTY_SOURCES)
       t.setRangeMap(Constants.RANGEMAP)
-      t.setExcOut(Constants.EXC_DIRTY)
+      t.setStaticsList(Constants.STATICS_LIST)
       t.setCleanCompiled(Constants.JAR_SRG)
+      t.dependsOn("deobfuscate")
     }
 
     makeTask[ApplySrg2SourceTask]("retroMapSources"){ t =>
@@ -238,7 +239,7 @@ class McpPlugin extends Plugin[Project] {
       t.addExc(toDelayedFile(Constants.MCP_EXC))
       t.addExc(toDelayedFile(Constants.SRG_EXC))
       t.setRangeMap(Constants.RANGEMAP)
-      t.setExcModifiers(Constants.EXC_DIRTY)
+      t.setStaticsList(Constants.STATICS_LIST)
       t.dependsOn("generateMappings", "generateRangeMap")
     }
 
