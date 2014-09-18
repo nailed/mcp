@@ -98,6 +98,11 @@ class PatchSourceJarTask extends EditJarTask {
       }
     }
     if(fuzzed) getLogger.lifecycle("Patches Fuzzed!")
+    if(failure != null){
+      getLogger.warn("The patching failed. To fix it, you have to manually apply the rejected patches")
+      getLogger.warn("Check the generated rejections file, manually patch the changes in into the code,")
+      getLogger.warn("and run \'gradle generatePatches\' when you are done")
+    }
   }
 
   def readPatches(files: FileCollection): immutable.List[PatchedFile] = {
