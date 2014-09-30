@@ -5,6 +5,7 @@ import java.util.zip.{ZipEntry, ZipFile, ZipOutputStream}
 
 import com.google.common.base.{Charsets, Strings}
 import com.google.common.io.{ByteStreams, Files}
+import jk_5.nailed.mcp.Constants
 import jk_5.nailed.mcp.delayed.DelayedFile
 import jk_5.nailed.mcp.tasks.CachedTask.Cached
 import org.gradle.api.tasks.{InputFile, OutputFile, TaskAction}
@@ -20,7 +21,6 @@ import scala.collection.mutable
 class RemoveShadedLibsTask extends CachedTask {
 
   @InputFile private var config: DelayedFile = _
-  @InputFile private var inJar: DelayedFile = _
   @OutputFile @Cached private var outJar: DelayedFile = _
 
   private val remove = mutable.HashSet[String]()
@@ -43,7 +43,7 @@ class RemoveShadedLibsTask extends CachedTask {
     var inFile: ZipFile = null
     var outStream: ZipOutputStream = null
     try{
-      inFile = new ZipFile(this.inJar.call())
+      inFile = new ZipFile(this.getInJar)
       outStream = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(this.outJar.call())))
 
       for(e <- inFile.entries()){
@@ -62,11 +62,11 @@ class RemoveShadedLibsTask extends CachedTask {
     }
   }
 
-  def setInJar(inJar: DelayedFile) = this.inJar = inJar
   def setOutJar(outJar: DelayedFile) = this.outJar = outJar
   def setConfig(config: DelayedFile) = this.config = config
 
-  def getInJar = this.inJar.call()
+  @InputFile
+  def getInJar = this.getProject.getConfigurations.getByName(Constants.MCJAR_CONFIGURATION).getSingleFile
   def getOutJar = this.outJar.call()
   def getConfig = this.config.call()
 }

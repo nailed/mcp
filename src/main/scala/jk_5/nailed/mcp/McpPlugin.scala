@@ -8,7 +8,7 @@ import groovy.lang.Closure
 import jk_5.nailed.mcp.delayed._
 import jk_5.nailed.mcp.tasks._
 import org.gradle.api._
-import org.gradle.api.artifacts.repositories.MavenArtifactRepository
+import org.gradle.api.artifacts.repositories.{IvyArtifactRepository, MavenArtifactRepository}
 import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.Copy
@@ -54,30 +54,30 @@ class McpPlugin extends Plugin[Project] {
           r.setName("forge")
           r.setUrl("http://files.minecraftforge.net/maven")
         }
+        addIvyRepo(project){ r =>
+          r.setName("Minecraft amazon bucket")
+          r.artifactPattern("http://s3.amazonaws.com/Minecraft.Download/versions/[revision]/[module].[revision].jar")
+          r.ivyPattern("http://s3.amazonaws.com/file.xml")
+        }
       }
     })
 
     project.getExtensions.create(Constants.MCP_EXTENSION_NAME, classOf[NailedMCPExtension], project)
 
     project.getConfigurations.create(Constants.FERNFLOWER_CONFIGURATION)
+    project.getConfigurations.create(Constants.MCJAR_CONFIGURATION)
     val mcCfg = project.getConfigurations.create(Constants.MINECRAFT_CONFIGURATION)
     val nailedCfg = project.getConfigurations.create(Constants.NAILED_CONFIGURATION)
     project.getConfigurations.getByName("compile").extendsFrom(mcCfg)
     project.getConfigurations.getByName("compile").extendsFrom(nailedCfg)
+
     project.getDependencies.add(Constants.FERNFLOWER_CONFIGURATION, "de.fernflower:fernflower:1.0")
 
     val apiProject = project.getSubprojects.find(_.getName == Constants.API_SUBPROJECT).get
 
-    makeTask[DownloadTask]("downloadServer"){ t =>
-      t.setOutput(Constants.SERVER_JAR_VANILLA)
-      t.setUrl(Constants.MC_SERVER_URL)
-    }
-
     makeTask[RemoveShadedLibsTask]("removeShadedLibs"){ t =>
       t.setConfig(Constants.SHADEDLIB_REMOVE_CONFIG)
-      t.setInJar(Constants.SERVER_JAR_VANILLA)
       t.setOutJar(Constants.JAR_UNSHADED)
-      t.dependsOn("downloadServer")
     }
 
     makeTask[DownloadMappingsTask]("downloadMappings"){ t =>
@@ -363,9 +363,13 @@ class McpPlugin extends Plugin[Project] {
       deps.add(Constants.MINECRAFT_CONFIGURATION, dep.getAsString)
     }
 
+    val ext = project.getExtensions.getByName(Constants.MCP_EXTENSION_NAME).asInstanceOf[NailedMCPExtension]
+
     //Add extra srg
     val task = project.getTasks.getByName("reobfuscate").asInstanceOf[ReobfuscateTask]
-    task.setExtraSrg(project.getExtensions.getByName(Constants.MCP_EXTENSION_NAME).asInstanceOf[NailedMCPExtension].getExtraSrg)
+    task.setExtraSrg(ext.getExtraSrg)
+
+    project.getDependencies.add(Constants.MCJAR_CONFIGURATION, s"net.minecraft:minecraft_server:${ext.getMinecraftVersion}@jar")
   }
 
   def injectIdeaRunConfigs(doc: Document, module: String){
@@ -438,6 +442,12 @@ class McpPlugin extends Plugin[Project] {
   def addMavenRepo(project: Project)(configure: (MavenArtifactRepository) => Unit){
     project.getRepositories.maven(new Action[MavenArtifactRepository] {
       override def execute(repo: MavenArtifactRepository) = configure(repo)
+    })
+  }
+
+  def addIvyRepo(project: Project)(configure: (IvyArtifactRepository) => Unit){
+    project.getRepositories.ivy(new Action[IvyArtifactRepository] {
+      override def execute(repo: IvyArtifactRepository) = configure(repo)
     })
   }
 
