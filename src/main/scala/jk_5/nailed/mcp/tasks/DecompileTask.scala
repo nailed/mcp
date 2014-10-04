@@ -1,24 +1,26 @@
 package jk_5.nailed.mcp.tasks
 
-import org.gradle.api.tasks.{OutputFile, TaskAction, InputFile}
-import jk_5.nailed.mcp.delayed.DelayedFile
 import java.io._
-import groovy.lang.Closure
-import org.gradle.process.JavaExecSpec
-import jk_5.nailed.mcp.{NailedMCPExtension, Constants, Utils}
-import java.util.zip.{ZipEntry, ZipOutputStream, ZipInputStream}
-import scala.collection.convert.wrapAsScala._
-import com.google.common.io.{Files, ByteStreams}
-import com.google.common.base.{Joiner, Charsets}
-import jk_5.nailed.mcp.patching.{ClassNameCleanup, SourceCleanup, ContextualPatch, FernFlowerPatcher}
-import jk_5.nailed.mcp.patching.ContextualPatch.{PatchStatus, PatchReport, IContextProvider}
 import java.util
-import com.google.common.collect.{ArrayListMultimap, Lists}
-import org.gradle.api.logging.LogLevel
-import com.github.abrarsyed.jastyle.{OptParser, ASFormatter, FileWildcardFilter}
-import CachedTask.Cached
 import java.util.Collections
 import java.util.regex.Pattern
+import java.util.zip.{ZipEntry, ZipInputStream, ZipOutputStream}
+
+import com.github.abrarsyed.jastyle.{ASFormatter, FileWildcardFilter, OptParser}
+import com.google.common.base.{Charsets, Joiner}
+import com.google.common.collect.{ArrayListMultimap, Lists}
+import com.google.common.io.{ByteStreams, Files}
+import groovy.lang.Closure
+import jk_5.nailed.mcp.delayed.DelayedFile
+import jk_5.nailed.mcp.patching.ContextualPatch.{IContextProvider, PatchReport, PatchStatus}
+import jk_5.nailed.mcp.patching.{ClassNameCleanup, ContextualPatch, FernFlowerPatcher, SourceCleanup}
+import jk_5.nailed.mcp.tasks.CachedTask.Cached
+import jk_5.nailed.mcp.{Constants, NailedMCPExtension, Utils}
+import org.gradle.api.logging.LogLevel
+import org.gradle.api.tasks.{InputFile, OutputFile, TaskAction}
+import org.gradle.process.JavaExecSpec
+
+import scala.collection.convert.wrapAsScala._
 
 /**
  * No description given
@@ -29,7 +31,6 @@ class DecompileTask extends CachedTask {
 
   @InputFile private var inJar: DelayedFile = _
   @InputFile private var astyleConfig: DelayedFile = _
-  @InputFile private var fernFlowerJar: File = _
   private var patch: DelayedFile = _
   @OutputFile @Cached private var outJar: DelayedFile = _
 
@@ -249,13 +250,13 @@ class DecompileTask extends CachedTask {
 
   def setInJar(inJar: DelayedFile) = this.inJar = inJar
   def setAStyleConfig(astyleConfig: DelayedFile) = this.astyleConfig = astyleConfig
-  def setFernFlowerJar(fernFlowerJar: File) = this.fernFlowerJar = fernFlowerJar
   def setPatch(patch: DelayedFile) = this.patch = patch
   def setOutJar(outJar: DelayedFile) = this.outJar = outJar
 
+  @InputFile
+  def getFernFlowerJar = this.getProject.getConfigurations.getByName(Constants.FERNFLOWER_CONFIGURATION).getSingleFile
   def getInJar = this.inJar.call()
   def getAStyleConfig = this.astyleConfig.call()
-  def getFernFlowerJar = this.fernFlowerJar
   def getPatch = this.patch.call()
   def getOutJar = this.outJar.call()
 }
