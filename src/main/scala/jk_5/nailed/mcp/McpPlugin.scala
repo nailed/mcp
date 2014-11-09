@@ -344,7 +344,7 @@ class McpPlugin extends Plugin[Project] {
     }
 
     metaTask("setupNailed"){ t =>
-      t.dependsOn("downloadMappings", "extractNailedSources", "extractMinecraftSources")
+      t.dependsOn("extractNailedSources", "extractMinecraftSources")
       t.setGroup("Nailed-MCP")
       t.setDescription("Decompiles minecraft and sets up the development environment")
     }

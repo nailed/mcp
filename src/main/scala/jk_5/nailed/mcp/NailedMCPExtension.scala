@@ -44,7 +44,7 @@ class NailedMCPExtension(val project: Project) {
 
     val index = mappings.lastIndexOf('_')
     mappingsChannel = mappings.substring(0, index)
-    mappingsChannel = mappings.substring(index + 1)
+    mappingsVersion = mappings.substring(index + 1)
     mappingsAreSet = true
   }
 }
