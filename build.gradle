@@ -4,7 +4,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'maven'
 
 group='jk_5.nailed.mcp'
-version='1.3.2'
+version='1.3.5'
 
 repositories {
     mavenCentral()
@@ -22,10 +22,6 @@ repositories {
         //Because SpecialSource 1.7 is still beta
         name = "sonatype"
         url = "https://oss.sonatype.org/content/repositories/snapshots/"
-    }
-    maven {
-        name = "offlineRepo"
-        url = "http://localhost:81"
     }
 }
 
@@ -56,7 +52,7 @@ dependencies {
 }
 
 uploadArchives {
-    if (project.hasProperty("deploymaven") && false) {
+    if (project.hasProperty("deploymaven")) {
         logger.lifecycle('Deploying to file server')
         repositories.mavenDeployer {
             configuration = configurations.deployer

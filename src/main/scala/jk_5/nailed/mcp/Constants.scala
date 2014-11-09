@@ -17,7 +17,7 @@ object Constants {
   final val NEWLINE = Properties.lineSeparator
   final val HASH_FUNC = "MD5"
 
-  final val MAPPINGS_URL_BASE = "http://mcpbot.bspk.rs/testcsv/"
+  final val MAPPINGS_URL_BASE = "http://export.mcpbot.bspk.rs/"
   final val MAPPINGS_URL_METHODS = MAPPINGS_URL_BASE + "methods.csv"
   final val MAPPINGS_URL_FIELDS = MAPPINGS_URL_BASE + "fields.csv"
   final val MAPPINGS_URL_PARAMS = MAPPINGS_URL_BASE + "params.csv"

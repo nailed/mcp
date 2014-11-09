@@ -44,12 +44,20 @@ class DownloadMappingsTask extends DefaultTask {
     var connection: HttpURLConnection = null
     var inStream: InputStream = null
     var outStream: OutputStream = null
-    try{
+    try {
       connection = new URL(url).openConnection.asInstanceOf[HttpURLConnection]
+      connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10) AppleWebKit/600.1.25 (KHTML, like Gecko) Version/8.0 Safari/600.1.25")
+      connection.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
       connection.setInstanceFollowRedirects(true)
       inStream = connection.getInputStream
       outStream = new FileOutputStream(dest)
       ByteStreams.copy(inStream, outStream)
+    }catch{
+      case e: Exception =>
+        if(connection != null){
+          getLogger.lifecycle("Got unknown response: " + connection.getResponseCode + ": " + connection.getResponseMessage)
+        }
+        throw e
     }finally{
       if(inStream != null) inStream.close()
       if(inStream != null){

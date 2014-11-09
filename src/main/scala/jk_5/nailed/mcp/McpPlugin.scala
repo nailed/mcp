@@ -45,10 +45,10 @@ class McpPlugin extends Plugin[Project] {
           r.setUrl(Constants.MINECRAFT_MAVEN_URL)
         }
         project.getRepositories.mavenCentral
-        /*addMavenRepo(project){ r =>
-          r.setName("reening")
-          r.setUrl("http://maven.reening.nl")
-        }*/
+        addMavenRepo(project){ r =>
+          r.setName("jk-5")
+          r.setUrl("http://maven.jk-5.tk")
+        }
         addMavenRepo(project){ r =>
           r.setName("forge")
           r.setUrl("http://files.minecraftforge.net/maven")
