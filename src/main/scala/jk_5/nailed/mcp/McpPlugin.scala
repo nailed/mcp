@@ -3,6 +3,7 @@ package jk_5.nailed.mcp
 import _root_.java.io.FileReader
 import _root_.java.util
 
+import com.google.common.collect.ImmutableMap
 import com.google.gson.JsonParser
 import groovy.lang.Closure
 import jk_5.nailed.mcp.delayed._
@@ -65,6 +66,7 @@ class McpPlugin extends Plugin[Project] {
 
     project.getConfigurations.create(Constants.FERNFLOWER_CONFIGURATION)
     project.getConfigurations.create(Constants.MCJAR_CONFIGURATION)
+    project.getConfigurations.create(Constants.MAPPINGS_CONFIGURATION)
     val mcCfg = project.getConfigurations.create(Constants.MINECRAFT_CONFIGURATION)
     val nailedCfg = project.getConfigurations.create(Constants.NAILED_CONFIGURATION)
     project.getConfigurations.getByName("compile").extendsFrom(mcCfg)
@@ -80,11 +82,10 @@ class McpPlugin extends Plugin[Project] {
       t.setDescription("Removes all the shaded libraries and files from the minecraft jar")
     }
 
-    makeTask[DownloadMappingsTask]("downloadMappings"){ t =>
-      t.setFieldCsv(Constants.FIELDS_CSV)
-      t.setMethodCsv(Constants.METHODS_CSV)
-      t.setParamCsv(Constants.PARAMS_CSV)
-      t.setDescription("Downloads the latest mcpbot testcsv mappings")
+    makeTask[ExtractTask]("extractMappings"){ t =>
+      t.into(Constants.CSV_MAPPINGS_DIR)
+      t.from(project.getConfigurations.getByName(Constants.MAPPINGS_CONFIGURATION).getSingleFile.getAbsolutePath)
+      t.setDoesCache(true);
     }
 
     makeTask[GenerateMappingsTask]("generateMappings"){ t =>
@@ -110,7 +111,7 @@ class McpPlugin extends Plugin[Project] {
         }
       }
 
-      t.mustRunAfter("downloadMappings")
+      t.dependsOn("extractMappings")
       t.setDescription("Generates remapped .srg and .exc files from the joined srg and exc files combined with the mcp mappings")
     }
 
@@ -399,6 +400,15 @@ class McpPlugin extends Plugin[Project] {
     }
 
     val ext = project.getExtensions.getByName(Constants.MCP_EXTENSION_NAME).asInstanceOf[NailedMCPExtension]
+
+    if(ext.mappingsSet){
+      project.getDependencies.add(Constants.MAPPINGS_CONFIGURATION, ImmutableMap.of(
+        "group", "de.oceanlabs.mcp",
+        "name", "mcp_" + ext.getMappingsChannel,
+        "version", ext.getMappingsChannel + "-" + ext.getMinecraftVersion,
+        "ext", "zip"
+      ))
+    }
 
     //Add extra srg
     val task = project.getTasks.getByName("reobfuscate").asInstanceOf[ReobfuscateTask]

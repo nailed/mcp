@@ -17,15 +17,11 @@ object Constants {
   final val NEWLINE = Properties.lineSeparator
   final val HASH_FUNC = "MD5"
 
-  final val MAPPINGS_URL_BASE = "http://export.mcpbot.bspk.rs/"
-  final val MAPPINGS_URL_METHODS = MAPPINGS_URL_BASE + "methods.csv"
-  final val MAPPINGS_URL_FIELDS = MAPPINGS_URL_BASE + "fields.csv"
-  final val MAPPINGS_URL_PARAMS = MAPPINGS_URL_BASE + "params.csv"
-
   final val FERNFLOWER_CONFIGURATION = "fernFlower"
   final val MINECRAFT_CONFIGURATION = "minecraft"
   final val NAILED_CONFIGURATION = "nailed"
   final val MCJAR_CONFIGURATION = "mcjar"
+  final val MAPPINGS_CONFIGURATION = "mappings"
   final val API_SUBPROJECT = "api"
 
   final val JAR_UNSHADED = "{BUILD_DIR}/tmp/jars/minecraft-unshaded.jar"
@@ -61,6 +57,7 @@ object Constants {
   final val METHODS_CSV = "{BUILD_DIR}/tmp/mappings/csv/methods.csv"
   final val FIELDS_CSV = "{BUILD_DIR}/tmp/mappings/csv/fields.csv"
   final val PARAMS_CSV = "{BUILD_DIR}/tmp/mappings/csv/params.csv"
+  final val CSV_MAPPINGS_DIR = "{BUILD_DIR}/tmp/mappings/csv/"
   final val STATICS_LIST = "{BUILD_DIR}/tmp/mappings/generated/statics.txt"
 
   final val NAILED_JAVA_SOURCES = "{PROJECT_DIR}/src/main/java"
