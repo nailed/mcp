@@ -84,7 +84,9 @@ class McpPlugin extends Plugin[Project] {
 
     makeTask[ExtractTask]("extractMappings"){ t =>
       t.into(Constants.CSV_MAPPINGS_DIR)
-      t.from(project.getConfigurations.getByName(Constants.MAPPINGS_CONFIGURATION).getSingleFile.getAbsolutePath)
+      t.from(new DelayedFile("dummy", this.project) {
+        override def resolve() = project.getConfigurations.getByName(Constants.MAPPINGS_CONFIGURATION).getSingleFile
+      })
       t.setDoesCache(true);
     }
 
