@@ -407,7 +407,7 @@ class McpPlugin extends Plugin[Project] {
       project.getDependencies.add(Constants.MAPPINGS_CONFIGURATION, ImmutableMap.of(
         "group", "de.oceanlabs.mcp",
         "name", "mcp_" + ext.getMappingsChannel,
-        "version", ext.getMappingsChannel + "-" + ext.getMinecraftVersion,
+        "version", ext.getMappingsVersion + "-" + ext.getMinecraftVersion,
         "ext", "zip"
       ))
     }
