@@ -2,6 +2,7 @@ package jk_5.nailed.mcp.tasks
 
 import java.io.{BufferedWriter, File, FileWriter}
 import java.net.{URL, URLClassLoader}
+import java.util
 
 import com.google.common.base.Charsets
 import com.google.common.io.Files
@@ -11,7 +12,7 @@ import net.md_5.specialsource.provider.{ClassLoaderProvider, JarProvider, JointP
 import net.md_5.specialsource.{Jar, JarMapping, JarRemapper}
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.FileCollection
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.{InputFiles, TaskAction}
 
 import scala.collection.convert.wrapAsScala._
 import scala.collection.mutable
@@ -31,6 +32,7 @@ class ReobfuscateTask extends DefaultTask{
   private var methodCsv: DelayedFile = _
   private var fieldCsv: DelayedFile = _
   private var extraSrg = mutable.ArrayBuffer[String]()
+  private var extraSrgFiles = mutable.ArrayBuffer[AnyRef]()
 
   @TaskAction def doTask(){
     val inJar = getProject.getTasks.getByName("jar").property("archivePath").asInstanceOf[File]
@@ -62,6 +64,8 @@ class ReobfuscateTask extends DefaultTask{
   private def obfuscate(inJar: File, classpath: FileCollection, srg: File){
     val mapping = new JarMapping
     mapping.loadMappings(Files.newReader(srg, Charsets.UTF_8), null, null, reverse)
+
+    getExtraSrgFiles.foreach(f => mapping.loadMappings(f))
 
     val remapper = new JarRemapper(null, mapping)
     val input = Jar.init(inJar)
@@ -99,6 +103,7 @@ class ReobfuscateTask extends DefaultTask{
   def setMethodCsv(methodCsv: DelayedFile) = this.methodCsv = methodCsv
   def setFieldCsv(fieldCsv: DelayedFile) = this.fieldCsv = fieldCsv
   def setExtraSrg(extraSrg: mutable.ArrayBuffer[String]) = this.extraSrg = extraSrg
+  def addExtraSrgFile(extraSrgFile: AnyRef) = this.extraSrgFiles += extraSrgFile
 
   def getOutJar = this.outJar.call()
   def getPreFFJar = this.preFFJar.call()
@@ -108,4 +113,24 @@ class ReobfuscateTask extends DefaultTask{
   def getMethodCsv = this.methodCsv.call()
   def getFieldCsv = this.fieldCsv.call()
   def getExtraSrg = this.extraSrg
+
+  @InputFiles
+  def getExtraSrgFiles: FileCollection = {
+    val files = new util.ArrayList[File](extraSrgFiles.size)
+
+    for(obj <- getProject.files(extraSrgFiles.toArray)){
+      val f = getProject.file(obj)
+
+      if(f.isDirectory){
+        for(nested <- getProject.fileTree(f)){
+          if(Files.getFileExtension(f.getName).toLowerCase == "srg"){
+            files.add(f.getAbsoluteFile)
+          }
+        }
+      }else if(Files.getFileExtension(f.getName).toLowerCase == "srg"){
+        files.add(f.getAbsoluteFile)
+      }
+    }
+    getProject.files(files)
+  }
 }

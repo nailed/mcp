@@ -234,7 +234,7 @@ class DecompileTask extends CachedTask {
           getLogger.error("Hunk {} failed!", h.getHunkID)
         }
         throw report.getFailure
-      }else if (report.getStatus == PatchStatus.Fuzzed){
+      }else if(report.getStatus == PatchStatus.Fuzzed){
         getLogger.log(LogLevel.INFO, "Patching fuzzed: " + report.getTarget, report.getFailure)
         fuzzed = true
 

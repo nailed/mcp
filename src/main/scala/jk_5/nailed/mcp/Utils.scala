@@ -7,7 +7,7 @@ import java.util
 
 import au.com.bytecode.opencsv.{CSVParser, CSVReader}
 import com.google.common.collect.{ImmutableList, Lists}
-import com.google.common.io.{CharStreams, Files, InputSupplier}
+import com.google.common.io.{CharStreams, Files}
 
 import scala.collection.mutable
 
@@ -30,9 +30,7 @@ object Utils {
   }
 
   def lines(str: String): util.List[String] = try{
-    ImmutableList.copyOf(CharStreams.readLines(new InputSupplier[StringReader](){
-      override def getInput = new StringReader(str)
-    }): java.lang.Iterable[String])
+    ImmutableList.copyOf(CharStreams.readLines(new StringReader(str)): java.lang.Iterable[String])
   }catch{
     case e: Exception => ImmutableList.of[String]()
   }
