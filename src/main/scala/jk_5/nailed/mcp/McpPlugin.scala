@@ -387,8 +387,8 @@ class McpPlugin extends Plugin[Project] {
 
     //project.getDependencies.add("compile", project.getDependencies.module(apiProject))
 
-    javaConv.setSourceCompatibility("1.8")
-    javaConv.setTargetCompatibility("1.8")
+    javaConv.setSourceCompatibility("1.6")
+    javaConv.setTargetCompatibility("1.6")
   }
 
   def afterEvaluate(project: Project){
