@@ -321,23 +321,21 @@ class McpPlugin extends Plugin[Project] {
       t.setDescription("Packages everything needed at runtime to run the server")
     }
 
-    makeTask[Jar]("packageScaladoc"){ t =>
+    makeTask[Jar]("packageJavadoc"){ t =>
       t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
-      t.setClassifier("scaladoc")
-      t.from("build/docs/scaladoc")
-      t.dependsOn("scaladoc")
+      t.setClassifier("javadoc")
+      t.from("build/docs/javadoc")
+      t.dependsOn("javadoc")
       project.getArtifacts.add("archives", t)
-      t.setDescription("Packages the scaladoc")
+      t.setDescription("Packages the javadoc")
     }
 
     makeTask[Jar]("packageSource"){ t =>
       t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
       t.setClassifier("sources")
       t.from(toDelayedFileTree(Constants.NAILED_JAVA_SOURCES))
-      t.from(toDelayedFileTree(Constants.NAILED_SCALA_SOURCES))
       t.from(toDelayedFileTree(Constants.NAILED_RESOURCES))
       t.from(toDelayedFileTree(Constants.NAILED_JAVA_API_SOURCES))
-      t.from(toDelayedFileTree(Constants.NAILED_SCALA_API_SOURCES))
       t.from(toDelayedFileTree(Constants.NAILED_API_RESOURCES))
       project.getArtifacts.add("archives", t)
       t.setDescription("Packages all sourcecode")
@@ -350,7 +348,7 @@ class McpPlugin extends Plugin[Project] {
     }
 
     metaTask("buildPackages"){ t =>
-      t.dependsOn("packageServer", "packageScaladoc", "packageSource").setGroup("Nailed-MCP")
+      t.dependsOn("packageServer", "packageJavadoc", "packageSource").setGroup("Nailed-MCP")
       t.setGroup("Nailed-MCP")
       t.setDescription("Builds all packages")
     }
@@ -379,11 +377,9 @@ class McpPlugin extends Plugin[Project] {
 
     val javaConv = project.getConvention.getPlugins.get("java").asInstanceOf[JavaPluginConvention]
 
-    //val main = javaConv.getSourceSets.getByName("main")
-    ////val mainScala = main.asInstanceOf[ScalaSourceSet]
-    //main.getJava.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_SOURCES))
-    ////mainScala.getScala.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_SOURCES))
-    //main.getResources.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_RESOURCES))
+    val main = javaConv.getSourceSets.getByName("main")
+    main.getJava.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_SOURCES))
+    main.getResources.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_RESOURCES))
 
     //project.getDependencies.add("compile", project.getDependencies.module(apiProject))
 
