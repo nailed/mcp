@@ -29,7 +29,6 @@ class GenerateBinaryPatchesTask extends DefaultTask {
   @InputFile private var dirtyJar: DelayedFile = _
   @OutputFile private var outJar: DelayedFile = _
   private val patchList = new util.ArrayList[DelayedFileTree]()
-  @InputFile private var deobfuscationData: DelayedFile = _
   @InputFile private var srg: DelayedFile = _
 
   private val obfMapping = mutable.HashMap[String, String]()
@@ -189,7 +188,6 @@ class GenerateBinaryPatchesTask extends DefaultTask {
 
   def setDirtyJar(dirtyJar: DelayedFile) = this.dirtyJar = dirtyJar
   def setOutJar(outJar: DelayedFile) = this.outJar = outJar
-  def setDeobfuscationData(deobfuscationData: DelayedFile) = this.deobfuscationData = deobfuscationData
   def setSrg(srg: DelayedFile) = this.srg = srg
   def addPatchList(patchList: DelayedFileTree) = this.patchList.add(patchList)
 
@@ -197,6 +195,5 @@ class GenerateBinaryPatchesTask extends DefaultTask {
   def getCleanJar = this.getProject.getConfigurations.getByName(Constants.MCJAR_CONFIGURATION).getSingleFile
   def getDirtyJar = dirtyJar.call()
   def getOutJar = outJar.call()
-  def getDeobfuscationData = deobfuscationData.call()
   def getSrg = srg.call()
 }

@@ -26,13 +26,11 @@ object Constants {
 
   final val JAR_UNSHADED = "{BUILD_DIR}/tmp/jars/minecraft-unshaded.jar"
   final val JAR_SRG = "{BUILD_DIR}/tmp/jars/minecraft-remapped.jar"
-  final val DEOBF_DATA = "{BUILD_DIR}/tmp/data/deobfuscation_data.lzma"
   final val ZIP_DECOMP = "{BUILD_DIR}/tmp/jars/minecraft-decompiled.zip"
   final val PATCHED_DIRTY = "{BUILD_DIR}/tmp/jars/dirty-patched.zip"
   final val REMAPPED_CLEAN = "{BUILD_DIR}/tmp/jars/clean-remapped.jar"
   final val REMAPPED_DIRTY = "{BUILD_DIR}/tmp/jars/dirty-remapped.jar"
   final val RUNTIME_DIR = "{PROJECT_DIR}/runtime"
-  final val RUNTIME_VERSIONFILE = "{BUILD_DIR}/tmp/data/nailedversion.json"
   final val RANGEMAP = "{BUILD_DIR}/tmp/data/rangemap.txt"
   final val DIRTY_REMAPPED_SRC = "{BUILD_DIR}/tmp/jars/patch-dirty.zip"
   final val REOBFUSCATED = "{BUILD_DIR}/tmp/jars/reobfuscated.jar"

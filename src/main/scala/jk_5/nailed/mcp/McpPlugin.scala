@@ -12,7 +12,6 @@ import org.gradle.api._
 import org.gradle.api.artifacts.repositories.{IvyArtifactRepository, MavenArtifactRepository}
 import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.JavaPluginConvention
-import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.w3c.dom.{Document, Element}
@@ -185,7 +184,7 @@ class McpPlugin extends Plugin[Project] {
       t.setIncludeEmptyDirs(includeEmptyDirs = false)
       t.from(Constants.REMAPPED_CLEAN)
       t.into(Constants.MINECRAFT_CLEAN_RESOURCES)
-      t.dependsOn("remapCleanSource" /*, "extractWorkspace"*/)
+      t.dependsOn("remapCleanSource")
       t.setDescription("Extracts the minecraft resources from the jar into the clean src/main/resources")
     }
 
@@ -212,21 +211,6 @@ class McpPlugin extends Plugin[Project] {
       t.setDescription("Extracts the minecraft resources into the dirty src/main/resources")
     }
 
-    makeTask[CompressLzmaTask]("compressDeobfData"){ t =>
-      t.setInput(Constants.NOTCH_2_SRG_SRG)
-      t.setOutput(Constants.DEOBF_DATA)
-      t.dependsOn("generateMappings")
-      t.setDescription("Compresses the notch -> srg .srg file")
-    }
-
-    makeTask[Copy]("copyDeobfData"){ t =>
-      t.from(toDelayedFile(Constants.DEOBF_DATA))
-      t.from(toDelayedFile(Constants.RUNTIME_VERSIONFILE))
-      t.into(toDelayedFile(Constants.MINECRAFT_DIRTY_RESOURCES))
-      t.dependsOn("extractNailedResources", "compressDeobfData", "generateVersionFile")
-      t.setDescription("Copies the compressed .srg file and version info into the dirty src/main/resources")
-    }
-
     makeTask[ExtractTask]("extractNailedSources"){ t =>
       t.include(this.javaFiles: _*)
       t.from(Constants.REMAPPED_DIRTY)
@@ -237,17 +221,8 @@ class McpPlugin extends Plugin[Project] {
           if(files != null) files.foreach(_.delete())
         }
       })
-      t.dependsOn("copyDeobfData")
+      t.dependsOn("extractNailedResources")
       t.setDescription("Extracts the remapped and decompiled minecraft sources into the dirty src/main/java")
-    }
-
-    makeTask[GenerateVersionFileTask]("generateVersionFile"){ t =>
-      t.setInfoFile(Constants.VERSION_INFO)
-      t.setOutput(Constants.RUNTIME_VERSIONFILE)
-      t.addConfiguration(mcCfg)
-      t.addConfiguration(nailedCfg)
-      t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
-      t.setDescription("Generates the version.json file that contains information about the version and dependencies")
     }
 
     makeTask[ExtractRangeMapTask]("generateRangeMap"){ t =>
@@ -299,10 +274,9 @@ class McpPlugin extends Plugin[Project] {
     makeTask[GenerateBinaryPatchesTask]("generateBinaryPatches"){ t =>
       t.setDirtyJar(Constants.REOBFUSCATED)
       t.setOutJar(Constants.BINPATCHES)
-      t.setDeobfuscationData(Constants.DEOBF_DATA)
       t.setSrg(Constants.NOTCH_2_SRG_SRG)
       t.addPatchList(toDelayedFileTree(Constants.NAILED_PATCH_DIR))
-      t.dependsOn("reobfuscate", "compressDeobfData")
+      t.dependsOn("reobfuscate", "generateMappings")
       t.setDescription("Checks the binary difference between the compiled dirty source and the clean source, and writes it to the patch file")
     }
 
@@ -313,10 +287,8 @@ class McpPlugin extends Plugin[Project] {
         override def resolve(): FileTree = project.zipTree(apiProject.getTasks.getByName("jar").property("archivePath"))
       })
       t.from(toDelayedFileTree(Constants.NAILED_RESOURCES))
-      t.from(toDelayedFile(Constants.RUNTIME_VERSIONFILE))
-      t.from(toDelayedFile(Constants.DEOBF_DATA))
       t.setIncludeEmptyDirs(false)
-      t.dependsOn("generateBinaryPatches", /*"createChangelog",*/ "generateVersionFile", ":api:jar")
+      t.dependsOn("generateBinaryPatches", ":api:jar")
       project.getArtifacts.add("archives", t)
       t.setDescription("Packages everything needed at runtime to run the server")
     }
