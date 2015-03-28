@@ -5,7 +5,6 @@ import _root_.java.util
 
 import com.google.common.collect.ImmutableMap
 import com.google.gson.JsonParser
-import groovy.lang.Closure
 import jk_5.nailed.mcp.delayed._
 import jk_5.nailed.mcp.tasks._
 import org.gradle.api._
@@ -14,7 +13,6 @@ import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.plugins.ide.idea.model.IdeaModel
-import org.w3c.dom.{Document, Element}
 
 import scala.collection.convert.wrapAsScala._
 
@@ -332,21 +330,6 @@ class McpPlugin extends Plugin[Project] {
     ideaConv.getModule.setDownloadJavadoc(true)
     ideaConv.getModule.setDownloadSources(true)
 
-    if(ideaConv.getWorkspace.getIws != null){
-      ideaConv.getWorkspace.getIws.withXml(new Closure[AnyRef](this, null){
-        override def call(args: AnyRef*): AnyRef = {
-          val root = this.getDelegate.asInstanceOf[XmlProvider].asElement
-          val doc = root.getOwnerDocument
-          try{
-            injectIdeaRunConfigs(doc, project.getProjectDir.getCanonicalPath)
-          }catch{
-            case e: Exception => e.printStackTrace()
-          }
-          null
-        }
-      })
-    }
-
     val javaConv = project.getConvention.getPlugins.get("java").asInstanceOf[JavaPluginConvention]
 
     val main = javaConv.getSourceSets.getByName("main")
@@ -382,73 +365,6 @@ class McpPlugin extends Plugin[Project] {
     task.setExtraSrg(ext.getExtraSrg)
 
     project.getDependencies.add(Constants.MCJAR_CONFIGURATION, s"net.minecraft:minecraft_server:${ext.getMinecraftVersion}@jar")
-  }
-
-  def injectIdeaRunConfigs(doc: Document, module: String){
-    val list = doc.getElementsByTagName("component")
-    val ext = project.getExtensions.getByType(classOf[NailedMCPExtension])
-    var root: Element = null
-    for(i <- 0 until list.getLength){
-      val e = list.item(i).asInstanceOf[Element]
-      if(e.getAttribute("name") == "RunManager"){
-        root = e
-      }
-    }
-    {
-      val child = add(root, "configuration",
-        "default", "false",
-        "name", "Run Nailed Server",
-        "type", "Application",
-        "factoryName", "Application"
-      )
-      add(child, "option", "name", "MAIN_CLASS_NAME", "value", ext.getMainClass)
-      add(child, "option", "name", "VM_PARAMETERS", "value", "-server -Xms512M -Xmx512M -XX:+AggressiveOpts -XX:+OptimizeStringConcat -XX:+UseFastAccessorMethods -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled -Djava.awt.headless=true")
-      add(child, "option", "name", "PROGRAM_PARAMETERS", "value", "nogui")
-      add(child, "option", "name", "WORKING_DIRECTORY", "value", "file://" + toDelayedFile(Constants.RUNTIME_DIR).call().getCanonicalPath.replace(module, "$PROJECT_DIR$"))
-      add(child, "option", "name", "ALTERNATIVE_JRE_PATH_ENABLED", "value", "false")
-      add(child, "option", "name", "ALTERNATIVE_JRE_PATH", "value", "")
-      add(child, "option", "name", "ENABLE_SWING_INSPECTOR", "value", "false")
-      add(child, "option", "name", "ENV_VARIABLES")
-      add(child, "option", "name", "PASS_PARENT_ENVS", "value", "true")
-      add(child, "module", "name", project.getExtensions.getByName("idea").asInstanceOf[IdeaModel].getModule.getName)
-      add(child, "envs")
-      add(child, "RunnerSettings", "RunnerId", "Run")
-      add(child, "ConfigurationWrapper", "RunnerId", "Run")
-      add(child, "method")
-    }
-    addGradleRunConfig(root, "Update Patches", "generatePatches")
-    addGradleRunConfig(root, "Clean Dirty Sources", "cleanDirty")
-    addGradleRunConfig(root, "Setup Nailed", "setupNailed")
-  }
-
-  def addGradleRunConfig(root: Element, name: String, task: String){
-    val child = add(root, "configuration",
-      "default", "false",
-      "name", name,
-      "type", "GradleRunConfiguration",
-      "factoryName", "Gradle"
-    )
-    val s = add(root, "ExternalSystemSettings")
-    add(s, "option", "name", "externalProjectPath", "value", "$PROJECT_DIR$/build.gradle")
-    add(s, "option", "name", "externalSystemIdString", "value", "GRADLE")
-    add(s, "option", "name", "scriptParameters", "value", "")
-    val desc = add(s, "option", "name", "taskDescriptions")
-    add(desc, "list")
-    val names = add(s, "option", "name", "taskNames")
-    add(add(names, "list"), "option", "value", task)
-    add(s, "option", "name", "vmOptions", "value", "")
-    add(child, "method")
-  }
-
-  def add(parent: Element, name: String, values: String*): Element = {
-    val e = parent.getOwnerDocument.createElement(name)
-    var i = 0
-    while(i < values.length){
-      e.setAttribute(values(i), values(i + 1))
-      i += 2
-    }
-    parent.appendChild(e)
-    e
   }
 
   def addMavenRepo(project: Project)(configure: (MavenArtifactRepository) => Unit){
