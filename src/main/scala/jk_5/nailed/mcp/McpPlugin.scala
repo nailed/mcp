@@ -9,7 +9,6 @@ import jk_5.nailed.mcp.delayed._
 import jk_5.nailed.mcp.tasks._
 import org.gradle.api._
 import org.gradle.api.artifacts.repositories.{IvyArtifactRepository, MavenArtifactRepository}
-import org.gradle.api.file.FileTree
 import org.gradle.api.plugins.JavaPluginConvention
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.plugins.ide.idea.model.IdeaModel
@@ -65,13 +64,13 @@ class McpPlugin extends Plugin[Project] {
     project.getConfigurations.create(Constants.MCJAR_CONFIGURATION)
     project.getConfigurations.create(Constants.MAPPINGS_CONFIGURATION)
     val mcCfg = project.getConfigurations.create(Constants.MINECRAFT_CONFIGURATION)
-    val nailedCfg = project.getConfigurations.create(Constants.NAILED_CONFIGURATION)
     project.getConfigurations.getByName("compile").extendsFrom(mcCfg)
-    project.getConfigurations.getByName("compile").extendsFrom(nailedCfg)
 
     project.getDependencies.add(Constants.FERNFLOWER_CONFIGURATION, "de.fernflower:fernflower:1.0")
 
     val apiProject = project.getSubprojects.find(_.getName == Constants.API_SUBPROJECT).get
+
+    val javaConv = project.getConvention.getPlugins.get("java").asInstanceOf[JavaPluginConvention]
 
     makeTask[RemoveShadedLibsTask]("removeShadedLibs"){ t =>
       t.setConfig(Constants.SHADEDLIB_REMOVE_CONFIG)
@@ -225,7 +224,6 @@ class McpPlugin extends Plugin[Project] {
 
     makeTask[ExtractRangeMapTask]("generateRangeMap"){ t =>
       t.addConfiguration(mcCfg)
-      t.addConfiguration(nailedCfg)
       t.addInput(Constants.MINECRAFT_DIRTY_SOURCES)
       t.setRangeMap(Constants.RANGEMAP)
       t.setStaticsList(Constants.STATICS_LIST)
@@ -257,6 +255,13 @@ class McpPlugin extends Plugin[Project] {
       t.setDescription("Generates patches from the difference between the dirty source and the clean source")
     }
 
+    makeTask[Jar]("deobfJar"){ t =>
+      t.from(javaConv.getSourceSets.getByName("main").getAllSource)
+      t.setClassifier("deobf")
+      t.setDestinationDir(t.getTemporaryDir)
+      t.dependsOn("classes")
+    }
+
     makeTask[ReobfuscateTask]("reobfuscate"){ t =>
       t.setSrg(Constants.MCP_2_NOTCH_SRG)
       t.setExc(Constants.SRG_EXC)
@@ -265,7 +270,7 @@ class McpPlugin extends Plugin[Project] {
       t.setOutJar(Constants.REOBFUSCATED)
       t.setMethodCsv(Constants.METHODS_CSV)
       t.setFieldCsv(Constants.FIELDS_CSV)
-      t.dependsOn("jar", "extractNailedSources", "generateMappings")
+      t.dependsOn("deobfJar", "extractNailedSources", "generateMappings")
       t.setDescription("Reobfuscates the nailed code to use obfuscated names")
     }
 
@@ -276,19 +281,6 @@ class McpPlugin extends Plugin[Project] {
       t.addPatchList(toDelayedFileTree(Constants.NAILED_PATCH_DIR))
       t.dependsOn("reobfuscate", "generateMappings")
       t.setDescription("Checks the binary difference between the compiled dirty source and the clean source, and writes it to the patch file")
-    }
-
-    makeTask[Jar]("packageServer"){ t =>
-      t.getOutputs.upToDateWhen(Constants.CALL_FALSE)
-      t.from(toDelayedZipFileTree(Constants.BINPATCHES))
-      t.from(new Delayed[FileTree](null, project) {
-        override def resolve(): FileTree = project.zipTree(apiProject.getTasks.getByName("jar").property("archivePath"))
-      })
-      t.from(toDelayedFileTree(Constants.NAILED_RESOURCES))
-      t.setIncludeEmptyDirs(false)
-      t.dependsOn("generateBinaryPatches", ":api:jar")
-      project.getArtifacts.add("archives", t)
-      t.setDescription("Packages everything needed at runtime to run the server")
     }
 
     makeTask[Jar]("packageJavadoc"){ t =>
@@ -318,7 +310,7 @@ class McpPlugin extends Plugin[Project] {
     }
 
     metaTask("buildPackages"){ t =>
-      t.dependsOn("packageServer", "packageJavadoc", "packageSource").setGroup("Nailed-MCP")
+      t.dependsOn("packageJavadoc", "packageSource").setGroup("Nailed-MCP")
       t.setGroup("Nailed-MCP")
       t.setDescription("Builds all packages")
     }
@@ -330,13 +322,9 @@ class McpPlugin extends Plugin[Project] {
     ideaConv.getModule.setDownloadJavadoc(true)
     ideaConv.getModule.setDownloadSources(true)
 
-    val javaConv = project.getConvention.getPlugins.get("java").asInstanceOf[JavaPluginConvention]
-
     val main = javaConv.getSourceSets.getByName("main")
     main.getJava.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_SOURCES))
     main.getResources.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_RESOURCES))
-
-    //project.getDependencies.add("compile", project.getDependencies.module(apiProject))
   }
 
   def afterEvaluate(project: Project){

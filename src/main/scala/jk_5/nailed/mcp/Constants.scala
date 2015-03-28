@@ -19,7 +19,6 @@ object Constants {
 
   final val FERNFLOWER_CONFIGURATION = "fernFlower"
   final val MINECRAFT_CONFIGURATION = "minecraft"
-  final val NAILED_CONFIGURATION = "nailed"
   final val MCJAR_CONFIGURATION = "mcjar"
   final val MAPPINGS_CONFIGURATION = "mappings"
   final val API_SUBPROJECT = "api"

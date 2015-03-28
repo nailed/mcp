@@ -35,7 +35,7 @@ class ReobfuscateTask extends DefaultTask{
   private var extraSrgFiles = mutable.ArrayBuffer[AnyRef]()
 
   @TaskAction def doTask(){
-    val inJar = getProject.getTasks.getByName("jar").property("archivePath").asInstanceOf[File]
+    val inJar = getProject.getTasks.getByName("deobfJar").property("archivePath").asInstanceOf[File]
     var srg = getSrg
     if(getExc != null){
       val exceptor = new ReobfuscationExceptor
