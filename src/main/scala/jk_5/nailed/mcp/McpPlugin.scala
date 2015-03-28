@@ -382,9 +382,6 @@ class McpPlugin extends Plugin[Project] {
     main.getResources.srcDir(toDelayedFile(Constants.MINECRAFT_DIRTY_RESOURCES))
 
     //project.getDependencies.add("compile", project.getDependencies.module(apiProject))
-
-    javaConv.setSourceCompatibility("1.6")
-    javaConv.setTargetCompatibility("1.6")
   }
 
   def afterEvaluate(project: Project){
