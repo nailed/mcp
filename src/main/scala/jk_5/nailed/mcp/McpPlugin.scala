@@ -256,7 +256,7 @@ class McpPlugin extends Plugin[Project] {
     }
 
     makeTask[Jar]("deobfJar"){ t =>
-      t.from(javaConv.getSourceSets.getByName("main").getAllSource)
+      t.from(javaConv.getSourceSets.getByName("main").getOutput)
       t.setClassifier("deobf")
       t.setDestinationDir(t.getTemporaryDir)
       t.dependsOn("classes")
